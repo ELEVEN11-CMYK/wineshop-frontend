@@ -458,6 +458,13 @@ const AdminLogin = () => {
   const [toast,       setToast]       = useState(null);
   const [showLogout,  setShowLogout]  = useState(false);
   const [mounted,     setMounted]     = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+  const [registering, setRegistering] = useState(false);
+
+  const [regForm, setRegForm] = useState({
+  fullName: '', email: '', password: '', role: 'Staff',
+  });
+
   const { login } = useAuth();
   const navigate  = useNavigate();
 
@@ -483,16 +490,45 @@ const AdminLogin = () => {
   try {
     const data = await login(email, password);
     if (data.role === 'Admin' || data.role === 'Staff') {
-      navigate('/admin'); // ✅ Admin/Staff only
+      showToast('Login Successful!', 'success');
+      setTimeout(() => navigate('/admin'), 1500);
     } else {
-      setError('❌ You are not authorized to access admin panel.');
+      setError('You are not authorized to access admin panel.');
     }
   } catch (err) {
+    showToast('Invalid email or password.', 'error');
     setError('Invalid email or password.');
   } finally {
     setLoading(false);
   }
 };
+
+const handleRegister = async () => {
+  if (!regForm.fullName || !regForm.email || !regForm.password) {
+    showToast('Please fill all fields!', 'error');
+    return;
+  }
+  setRegistering(true);
+  try {
+    const { default: axiosInstance } = await import('../api/axios');
+    await axiosInstance.post('/auth/register', {
+      fullName: regForm.fullName,
+      email: regForm.email,
+      password: regForm.password,
+      role: regForm.role,
+      phone: '',
+      address: '',
+    });
+    showToast(`${regForm.role} added successfully!`, 'success');
+    setRegForm({ fullName: '', email: '', password: '', role: 'Staff' });
+    setShowRegister(false);
+  } catch (err) {
+    showToast('Email already exists!', 'error');
+  } finally {
+    setRegistering(false);
+  }
+};
+
   const handleLogout=()=>{
     setShowLogout(true);          // show full-screen overlay instantly
     setTimeout(()=>navigate('/'),2200); // navigate after user sees it
@@ -610,25 +646,135 @@ const AdminLogin = () => {
             <div style={{flex:1,height:'1px',background:'rgba(192,38,211,0.2)'}}/>
           </div>
 
-          <div style={{display:'flex',gap:'10px'}}>
-            <button className="back-btn" onClick={()=>navigate('/')} style={{
-              flex:1,background:'rgba(255,255,255,0.04)',
-              border:'1px solid rgba(255,255,255,0.1)',
-              color:'#9ca3af',cursor:'pointer',fontSize:'13px',
-              borderRadius:'10px',padding:'11px',
-              fontFamily:"'Outfit',sans-serif",transition:'all 0.2s',fontWeight:'600',
-            }}>← Back to Shop</button>
-            <button className="logout-btn" onClick={handleLogout} style={{
-              flex:1,background:'rgba(220,38,38,0.08)',
-              border:'1px solid rgba(220,38,38,0.3)',
-              color:'#fca5a5',cursor:'pointer',fontSize:'13px',
-              borderRadius:'10px',padding:'11px',
-              fontFamily:"'Outfit',sans-serif",transition:'all 0.2s',fontWeight:'600',
-            }}>🚪 Logout</button>
-          </div>
+          <button className="back-btn" onClick={()=>navigate('/')} style={{
+            width:'100%',background:'rgba(255,255,255,0.04)',
+            border:'1px solid rgba(255,255,255,0.1)',
+            color:'#9ca3af',cursor:'pointer',fontSize:'13px',
+            borderRadius:'10px',padding:'11px',
+            fontFamily:"'Outfit',sans-serif",transition:'all 0.2s',fontWeight:'600',
+          }}>← Back to Shop</button>
+  </div>
+
+        {/* Add New User Section */}
+        <div style={{marginTop:'16px'}}>
+          <button onClick={()=>setShowRegister(!showRegister)} style={{
+            width:'100%',
+            background:showRegister
+              ? 'rgba(220,38,38,0.1)'
+              : 'rgba(192,38,211,0.1)',
+            border:`1px solid ${showRegister ? 'rgba(220,38,38,0.3)' : 'rgba(192,38,211,0.3)'}`,
+            borderRadius:'12px',padding:'12px',
+            color: showRegister ? '#f87171' : '#c026d3',
+            cursor:'pointer',fontSize:'13px',fontWeight:'700',
+            fontFamily:"'Outfit',sans-serif",
+            letterSpacing:'1px',
+            transition:'all 0.2s',
+          }}>
+            {showRegister ? '✕ Cancel' : '➕ Add New User'}
+          </button>
+
+          {showRegister && (
+            <div style={{
+              marginTop:'12px',
+              background:'rgba(10,0,25,0.95)',
+              border:'1px solid rgba(192,38,211,0.3)',
+              borderRadius:'16px', padding:'24px',
+              boxShadow:'0 8px 32px rgba(0,0,0,0.5)',
+            }}>
+              <h3 style={{
+                color:'white',fontSize:'15px',fontWeight:'700',
+                marginBottom:'20px',textAlign:'center',
+                letterSpacing:'2px',textTransform:'uppercase',
+                fontFamily:"'Outfit',sans-serif",
+              }}>
+                ➕ Add New User
+              </h3>
+
+              <div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
+                <div>
+                  <label style={{color:'#a78bfa',fontSize:'11px',display:'block',marginBottom:'6px',letterSpacing:'2px',textTransform:'uppercase',fontWeight:'600'}}>
+                    Full Name
+                  </label>
+                  <input placeholder="John Doe" value={regForm.fullName}
+                    onChange={e=>setRegForm({...regForm,fullName:e.target.value})}
+                    style={{width:'100%',background:'rgba(255,255,255,0.05)',border:'1.5px solid rgba(192,38,211,0.25)',borderRadius:'10px',padding:'11px 14px',color:'white',outline:'none',fontSize:'13px',boxSizing:'border-box',fontFamily:"'Outfit',sans-serif"}}
+                  />
+                </div>
+
+                <div>
+                  <label style={{color:'#a78bfa',fontSize:'11px',display:'block',marginBottom:'6px',letterSpacing:'2px',textTransform:'uppercase',fontWeight:'600'}}>
+                    Email
+                  </label>
+                  <input type="email" placeholder="user@wineshop.com" value={regForm.email}
+                    onChange={e=>setRegForm({...regForm,email:e.target.value})}
+                    style={{width:'100%',background:'rgba(255,255,255,0.05)',border:'1.5px solid rgba(192,38,211,0.25)',borderRadius:'10px',padding:'11px 14px',color:'white',outline:'none',fontSize:'13px',boxSizing:'border-box',fontFamily:"'Outfit',sans-serif"}}
+                  />
+                </div>
+
+                <div>
+                  <label style={{color:'#a78bfa',fontSize:'11px',display:'block',marginBottom:'6px',letterSpacing:'2px',textTransform:'uppercase',fontWeight:'600'}}>
+                    Password
+                  </label>
+                  <input type="password" placeholder="••••••••" value={regForm.password}
+                    onChange={e=>setRegForm({...regForm,password:e.target.value})}
+                    style={{width:'100%',background:'rgba(255,255,255,0.05)',border:'1.5px solid rgba(192,38,211,0.25)',borderRadius:'10px',padding:'11px 14px',color:'white',outline:'none',fontSize:'13px',boxSizing:'border-box',fontFamily:"'Outfit',sans-serif"}}
+                  />
+                </div>
+
+                {/* Role Selection */}
+                <div>
+                  <label style={{color:'#a78bfa',fontSize:'11px',display:'block',marginBottom:'8px',letterSpacing:'2px',textTransform:'uppercase',fontWeight:'600'}}>
+                    Role
+                  </label>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'8px'}}>
+                    {[
+                      {role:'Admin', icon:'👑', desc:'Full Access'},
+                      {role:'Staff', icon:'👔', desc:'Limited Access'},
+                      {role:'Customer', icon:'🛒', desc:'Shop Only'},
+                    ].map(({role,icon,desc}) => (
+                      <div key={role} onClick={()=>setRegForm({...regForm,role})}
+                        style={{
+                          padding:'10px 6px',borderRadius:'10px',
+                          textAlign:'center',cursor:'pointer',
+                          background: regForm.role === role
+                            ? 'rgba(192,38,211,0.25)'
+                            : 'rgba(255,255,255,0.04)',
+                          border: `1.5px solid ${regForm.role === role
+                            ? '#c026d3'
+                            : 'rgba(255,255,255,0.1)'}`,
+                          transition:'all 0.2s',
+                        }}>
+                        <div style={{fontSize:'20px',marginBottom:'4px'}}>{icon}</div>
+                        <p style={{
+                          color: regForm.role === role ? 'white' : '#9ca3af',
+                          fontSize:'11px',fontWeight:'700',
+                          margin:'0 0 2px',
+                        }}>{role}</p>
+                        <p style={{color:'#6b21a8',fontSize:'10px',margin:0}}>{desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <button onClick={handleRegister} disabled={registering} style={{
+                  width:'100%',padding:'13px',marginTop:'4px',
+                  background:registering
+                    ? 'rgba(192,38,211,0.4)'
+                    : 'linear-gradient(135deg,#e04472,#c026d3,#7c3aed)',
+                  border:'none',borderRadius:'12px',color:'white',
+                  fontWeight:'800',cursor:registering?'not-allowed':'pointer',
+                  fontSize:'14px',letterSpacing:'1px',
+                  fontFamily:"'Outfit',sans-serif",
+                  boxShadow:'0 4px 20px rgba(192,38,211,0.4)',
+                }}>
+                  {registering ? '⏳ Adding User...' : '✅ Add User'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        <p style={{textAlign:'center',color:'#4b2670',fontSize:'11px',marginTop:'18px',letterSpacing:'2px'}}>
+        <p style={{textAlign:'center',color:'#4b2670',fontSize:'11px',marginTop:'16px',letterSpacing:'2px'}}>
           🔒 SECURE ADMIN ACCESS • WINE SHOP CMS
         </p>
       </div>
