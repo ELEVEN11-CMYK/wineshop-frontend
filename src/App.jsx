@@ -1,8 +1,11 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './customer/context/CartContext';
 import { ThemeProvider } from './context/ThemeContext';
 import PrivateRoute from './components/PrivateRoute';
+import Sidebar from './components/Sidebar';
+import Navbar from './components/Navbar';
 
 // Login Pages
 import CustomerLogin from './customer/pages/CustomerLogin';
@@ -31,6 +34,40 @@ import MyOrders from './customer/pages/MyOrders';
 import Contact from './customer/pages/Contact';
 import Profile from './customer/pages/Profile';
 
+// Page titles map
+const pageTitles = {
+  '/admin': 'Dashboard',
+  '/admin/products': 'Products',
+  '/admin/categories': 'Categories',
+  '/admin/inventory': 'Inventory',
+  '/admin/customers': 'Customers',
+  '/admin/orders': 'Orders',
+  '/admin/payments': 'Payments',
+  '/admin/suppliers': 'Suppliers',
+  '/admin/purchases': 'Purchases',
+  '/admin/reports': 'Reports',
+  '/admin/settings': 'Settings',
+};
+
+// Admin layout wrapper
+const AdminLayout = ({ children }) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+  const title = pageTitles[location.pathname] || 'Admin';
+
+  return (
+    <div className="min-h-screen bg-dark-100">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="lg:ml-64 flex flex-col min-h-screen">
+        <Navbar title={title} onMenuClick={() => setSidebarOpen(true)} />
+        <main className="flex-1 pt-16">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -53,109 +90,67 @@ function App() {
               <Route path="/login" element={<CustomerLogin />} />
               <Route path="/customer-login" element={<CustomerLogin />} />
 
-              {/* Admin Routes */}
+              {/* Admin Login - no layout */}
               <Route path="/admin-login" element={<AdminLogin />} />
 
-              <Route
-                path="/admin"
-                element={
-                  <PrivateRoute>
-                    <Dashboard />
-                  </PrivateRoute>
-                }
-              />
+              {/* Admin Routes - with layout */}
+              <Route path="/admin" element={
+                <PrivateRoute>
+                  <AdminLayout><Dashboard /></AdminLayout>
+                </PrivateRoute>
+              } />
+              <Route path="/admin/products" element={
+                <PrivateRoute>
+                  <AdminLayout><Products /></AdminLayout>
+                </PrivateRoute>
+              } />
+              <Route path="/admin/categories" element={
+                <PrivateRoute>
+                  <AdminLayout><Categories /></AdminLayout>
+                </PrivateRoute>
+              } />
+              <Route path="/admin/customers" element={
+                <PrivateRoute>
+                  <AdminLayout><Customers /></AdminLayout>
+                </PrivateRoute>
+              } />
+              <Route path="/admin/orders" element={
+                <PrivateRoute>
+                  <AdminLayout><Orders /></AdminLayout>
+                </PrivateRoute>
+              } />
+              <Route path="/admin/inventory" element={
+                <PrivateRoute>
+                  <AdminLayout><Inventory /></AdminLayout>
+                </PrivateRoute>
+              } />
+              <Route path="/admin/suppliers" element={
+                <PrivateRoute>
+                  <AdminLayout><Suppliers /></AdminLayout>
+                </PrivateRoute>
+              } />
+              <Route path="/admin/purchases" element={
+                <PrivateRoute>
+                  <AdminLayout><Purchases /></AdminLayout>
+                </PrivateRoute>
+              } />
+              <Route path="/admin/payments" element={
+                <PrivateRoute>
+                  <AdminLayout><Payments /></AdminLayout>
+                </PrivateRoute>
+              } />
+              <Route path="/admin/reports" element={
+                <PrivateRoute>
+                  <AdminLayout><Reports /></AdminLayout>
+                </PrivateRoute>
+              } />
+              <Route path="/admin/settings" element={
+                <PrivateRoute>
+                  <AdminLayout><Settings /></AdminLayout>
+                </PrivateRoute>
+              } />
 
-              <Route
-                path="/admin/products"
-                element={
-                  <PrivateRoute>
-                    <Products />
-                  </PrivateRoute>
-                }
-              />
-
-              <Route
-                path="/admin/categories"
-                element={
-                  <PrivateRoute>
-                    <Categories />
-                  </PrivateRoute>
-                }
-              />
-
-              <Route
-                path="/admin/customers"
-                element={
-                  <PrivateRoute>
-                    <Customers />
-                  </PrivateRoute>
-                }
-              />
-
-              <Route
-                path="/admin/orders"
-                element={
-                  <PrivateRoute>
-                    <Orders />
-                  </PrivateRoute>
-                }
-              />
-
-              <Route
-                path="/admin/inventory"
-                element={
-                  <PrivateRoute>
-                    <Inventory />
-                  </PrivateRoute>
-                }
-              />
-
-              <Route
-                path="/admin/suppliers"
-                element={
-                  <PrivateRoute>
-                    <Suppliers />
-                  </PrivateRoute>
-                }
-              />
-
-              <Route
-                path="/admin/purchases"
-                element={
-                  <PrivateRoute>
-                    <Purchases />
-                  </PrivateRoute>
-                }
-              />
-
-              <Route
-                path="/admin/payments"
-                element={
-                  <PrivateRoute>
-                    <Payments />
-                  </PrivateRoute>
-                }
-              />
-
-              <Route
-                path="/admin/reports"
-                element={
-                  <PrivateRoute>
-                    <Reports />
-                  </PrivateRoute>
-                }
-              />
-
-              <Route
-                path="/admin/settings"
-                element={
-                  <PrivateRoute>
-                    <Settings />
-                  </PrivateRoute>
-                }
-              />
-
-              {/* Catch All Route */}
+              {/* Catch All */}
               <Route path="*" element={<Navigate to="/" />} />
 
             </Routes>
