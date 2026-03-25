@@ -16,8 +16,6 @@ const CustomerLogin = () => {
     try {
       const res = await axios.post('/auth/login', { email, password });
       const data = res.data;
-
-      // ✅ Save customer token
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('customer', JSON.stringify({
@@ -28,12 +26,9 @@ const CustomerLogin = () => {
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
       }));
-
-      // ✅ Always go to home
       const redirectTo = localStorage.getItem('redirectAfterLogin');
       localStorage.removeItem('redirectAfterLogin');
       navigate(redirectTo || '/');
-
     } catch (err) {
       setError('Invalid email or password.');
     } finally {
@@ -41,49 +36,24 @@ const CustomerLogin = () => {
     }
   };
 
-  const inputStyle = {
-    width: '100%',
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: '10px', padding: '12px 16px',
-    color: 'white', outline: 'none', fontSize: '14px',
-    boxSizing: 'border-box',
-  };
-
   return (
     <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #05000f 0%, #1a0030 50%, #05000f 100%)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '24px',
+      display: 'flex', alignItems: 'center',
+      justifyContent: 'center', padding: '24px',
     }}>
-      <div style={{
-        position: 'fixed', width: '500px', height: '500px', borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(224,68,114,0.1), transparent)',
-        top: '-100px', left: '-100px', pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'fixed', width: '400px', height: '400px', borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(170,0,255,0.1), transparent)',
-        bottom: '-100px', right: '-100px', pointerEvents: 'none',
-      }} />
-
-      <div style={{ width: '100%', maxWidth: '440px', position: 'relative', zIndex: 1 }}>
-
-        {/* Logo */}
+      <div style={{ width: '100%', maxWidth: '440px' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ fontSize: '56px', marginBottom: '12px' }}>🍷</div>
-          <h1 style={{ color: 'white', fontSize: '28px', fontWeight: '800', marginBottom: '4px' }}>
-            Wine Shop
-          </h1>
-          <p style={{ color: '#e04472', fontSize: '12px', letterSpacing: '3px', textTransform: 'uppercase' }}>
+          <h1 style={{ color: 'white', fontSize: '28px', fontWeight: '800' }}>Wine Shop</h1>
+          <p style={{ color: '#e04472', fontSize: '12px', letterSpacing: '3px', textTransform: 'uppercase', marginTop: '4px' }}>
             Customer Portal
           </p>
         </div>
 
-        {/* Card */}
         <div style={{
-          background: 'rgba(10, 0, 20, 0.85)',
+          background: 'rgba(10,0,20,0.85)',
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(224,68,114,0.2)',
           borderRadius: '20px', padding: '36px',
@@ -114,28 +84,36 @@ const CustomerLogin = () => {
               </label>
               <input type="email" placeholder="your@email.com"
                 value={email} onChange={e => setEmail(e.target.value)} required
-                style={inputStyle} />
+                style={{
+                  width: '100%', background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '10px', padding: '12px 16px',
+                  color: 'white', outline: 'none', fontSize: '14px',
+                  boxSizing: 'border-box',
+                }}
+              />
             </div>
-
             <div style={{ marginBottom: '24px' }}>
               <label style={{ color: '#9ca3af', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
                 Password
               </label>
               <input type="password" placeholder="••••••••"
                 value={password} onChange={e => setPassword(e.target.value)} required
-                style={inputStyle} />
+                style={{
+                  width: '100%', background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '10px', padding: '12px 16px',
+                  color: 'white', outline: 'none', fontSize: '14px',
+                  boxSizing: 'border-box',
+                }}
+              />
             </div>
-
             <button type="submit" disabled={loading} style={{
               width: '100%', padding: '14px',
-              background: loading
-                ? 'rgba(224,68,114,0.5)'
-                : 'linear-gradient(135deg, #e04472, #aa00ff)',
+              background: loading ? 'rgba(224,68,114,0.5)' : 'linear-gradient(135deg, #e04472, #aa00ff)',
               border: 'none', borderRadius: '10px',
               color: 'white', fontWeight: '700',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: '16px',
-              boxShadow: '0 4px 20px rgba(224,68,114,0.4)',
+              cursor: loading ? 'not-allowed' : 'pointer', fontSize: '16px',
             }}>
               {loading ? 'Signing in...' : '🍷 Sign In'}
             </button>
@@ -143,8 +121,7 @@ const CustomerLogin = () => {
 
           <div style={{
             borderTop: '1px solid rgba(255,255,255,0.08)',
-            marginTop: '24px', paddingTop: '24px',
-            textAlign: 'center',
+            marginTop: '24px', paddingTop: '24px', textAlign: 'center',
           }}>
             <p style={{ color: '#6b7280', fontSize: '14px' }}>
               New customer?{' '}

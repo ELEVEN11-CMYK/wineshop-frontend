@@ -6,7 +6,6 @@ import CustomerFooter from '../components/CustomerFooter';
 const Profile = () => {
   const navigate = useNavigate();
   const customer = JSON.parse(localStorage.getItem('customer') || 'null');
-  const [activeTab, setActiveTab] = useState('profile');
 
   if (!customer) {
     navigate('/login');
@@ -17,30 +16,36 @@ const Profile = () => {
     <div style={{ background: '#05000f', minHeight: '100vh' }}>
       <CustomerNavbar />
 
-      <div style={{ padding: '90px 64px 48px' }}>
+      <div style={{ padding: 'clamp(80px, 10vw, 90px) clamp(16px, 5vw, 64px) 48px' }}>
 
         {/* Profile Header */}
         <div style={{
           background: 'linear-gradient(135deg, #1a0030, #0d0018)',
-          borderRadius: '20px', padding: '32px',
+          borderRadius: '20px', padding: 'clamp(20px, 4vw, 32px)',
           marginBottom: '24px',
           border: '1px solid rgba(224,68,114,0.2)',
-          display: 'flex', alignItems: 'center', gap: '24px',
+          display: 'flex', alignItems: 'center',
+          gap: '24px', flexWrap: 'wrap',
         }}>
           {/* Avatar */}
           <div style={{
             width: '80px', height: '80px', borderRadius: '50%',
             background: 'linear-gradient(135deg, #e04472, #aa00ff)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'white', fontWeight: 'bold', fontSize: '32px',
+            display: 'flex', alignItems: 'center',
+            justifyContent: 'center', color: 'white',
+            fontWeight: 'bold', fontSize: '32px',
             flexShrink: 0,
             boxShadow: '0 8px 32px rgba(224,68,114,0.3)',
           }}>
             {customer.fullName?.charAt(0).toUpperCase()}
           </div>
 
-          <div style={{ flex: 1 }}>
-            <h1 style={{ color: 'white', fontSize: '28px', fontWeight: '800', marginBottom: '4px' }}>
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <h1 style={{
+              color: 'white',
+              fontSize: 'clamp(20px, 4vw, 28px)',
+              fontWeight: '800', marginBottom: '4px',
+            }}>
               {customer.fullName}
             </h1>
             <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '8px' }}>
@@ -66,45 +71,21 @@ const Profile = () => {
           </button>
         </div>
 
-        {/* Tabs */}
-        <div style={{
-          display: 'flex', gap: '8px', marginBottom: '24px',
-          background: 'rgba(255,255,255,0.03)',
-          borderRadius: '14px', padding: '6px',
-          border: '1px solid rgba(255,255,255,0.08)',
-          width: 'fit-content',
-        }}>
-          {[
-            { id: 'profile', label: '👤 Profile' },
-            { id: 'orders', label: '📦 Orders' },
-          ].map(tab => (
-            <button key={tab.id} onClick={() => {
-              setActiveTab(tab.id);
-              if (tab.id === 'orders') navigate('/my-orders');
-            }} style={{
-              padding: '8px 20px', borderRadius: '10px', border: 'none',
-              background: activeTab === tab.id
-                ? 'linear-gradient(135deg, #e04472, #aa00ff)'
-                : 'transparent',
-              color: activeTab === tab.id ? 'white' : '#6b7280',
-              cursor: 'pointer', fontSize: '13px', fontWeight: '500',
-            }}>
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Profile Info */}
+        {/* Account Info */}
         <div style={{
           background: 'rgba(255,255,255,0.03)',
           border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: '16px', padding: '24px',
+          borderRadius: '16px', padding: 'clamp(16px, 4vw, 24px)',
           marginBottom: '24px',
         }}>
           <h3 style={{ color: 'white', fontWeight: '600', fontSize: '16px', marginBottom: '20px' }}>
             Account Information
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '16px',
+          }}>
             {[
               { label: 'Full Name', value: customer.fullName, icon: '👤' },
               { label: 'Email', value: customer.email, icon: '📧' },
@@ -129,8 +110,9 @@ const Profile = () => {
 
         {/* Quick Actions */}
         <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '16px',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+          gap: '16px', marginBottom: '32px',
         }}>
           {[
             { icon: '🛒', label: 'Browse Shop', path: '/shop', color: '#e04472' },
@@ -149,16 +131,18 @@ const Profile = () => {
               onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
               onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              <div style={{ fontSize: '36px', marginBottom: '8px' }}>{action.icon}</div>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>{action.icon}</div>
               <p style={{ color: 'white', fontWeight: '500', fontSize: '14px' }}>{action.label}</p>
             </div>
           ))}
         </div>
 
         {/* Logout */}
-        <div style={{ textAlign: 'center', marginTop: '32px' }}>
+        <div style={{ textAlign: 'center' }}>
           <button onClick={() => {
             localStorage.removeItem('customer');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
             navigate('/');
           }} style={{
             background: 'rgba(239,68,68,0.15)',
