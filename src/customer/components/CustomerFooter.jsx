@@ -1,11 +1,13 @@
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
 
 const CustomerFooter = () => {
   const navigate = useNavigate();
+  const { bg, text, textSecondary, border } = useTheme();
   return (
     <footer style={{
-      background: '#050008',
-      borderTop: '1px solid rgba(224,68,114,0.2)',
+      background: bg === '#05000f' ? '#050008' : '#f0ebff',
+      borderTop: `1px solid ${border}`,
       padding: '48px 64px 24px',
     }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '32px', marginBottom: '40px' }}>

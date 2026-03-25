@@ -73,3 +73,48 @@ body {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .desktop-nav { display: none !important; }
+  .hamburger { display: block !important; }
+}
+
+@media (max-width: 768px) {
+  /* Home page */
+  h1 { font-size: 36px !important; }
+
+  /* Shop grid */
+  .shop-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Cart */
+  .cart-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Contact */
+  .contact-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Wine Detail */
+  .wine-detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Footer */
+  .footer-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .shop-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

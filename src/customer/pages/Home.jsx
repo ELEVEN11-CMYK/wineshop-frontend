@@ -4,12 +4,14 @@ import CustomerNavbar from '../components/CustomerNavbar';
 import CustomerFooter from '../components/CustomerFooter';
 import WineCard from '../components/WineCard';
 import axios from '../../api/axios';
+import { useTheme } from '../../context/ThemeContext';
 
 const Home = () => {
   const [featured, setFeatured] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { bg, text, textSecondary, bgSecondary, border } = useTheme();
 
 useEffect(() => {
   const fetchData = async () => {
@@ -32,7 +34,7 @@ useEffect(() => {
 }, []);
 
   return (
-    <div style={{ background: '#05000f', minHeight: '100vh' }}>
+    <div style={{ background: bg, minHeight: '100vh' }}>
       <CustomerNavbar />
 
       {/* Hero Section */}
