@@ -13,108 +13,117 @@ const Home = () => {
   const navigate = useNavigate();
   const { bg, text, textSecondary, bgSecondary, border } = useTheme();
 
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const [prodRes, catRes] = await Promise.all([
-        axios.get('/products?page=1&pageSize=6'),
-        axios.get('/categories'),
-      ]);
-      setFeatured(prodRes.data.data);
-      setCategories(catRes.data);
-    } catch (err) {
-      console.log('API not available');
-      setFeatured([]);
-      setCategories([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchData(); // ✅ Make sure this line exists!
-}, []);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [prodRes, catRes] = await Promise.all([
+          axios.get('/products?page=1&pageSize=6'),
+          axios.get('/categories'),
+        ]);
+        setFeatured(prodRes.data.data);
+        setCategories(catRes.data);
+      } catch (err) {
+        console.log('API not available');
+        setFeatured([]);
+        setCategories([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   return (
     <div style={{ background: bg, minHeight: '100vh' }}>
       <CustomerNavbar />
 
-      {/* Hero Section */}
+      {/* ── Hero Section ── */}
       <div style={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #05000f 0%, #1a0030 50%, #05000f 100%)',
-        display: 'flex', alignItems: 'center',
-        justifyContent: 'center',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
         position: 'relative', overflow: 'hidden',
         paddingTop: '70px',
       }}>
-        {/* Background Effects */}
+        {/* Background blobs */}
         <div style={{
-          position: 'absolute', width: '600px', height: '600px',
+          position: 'absolute', width: '60vw', height: '60vw', maxWidth: '600px', maxHeight: '600px',
           borderRadius: '50%',
           background: 'radial-gradient(circle, rgba(224,68,114,0.15), transparent)',
-          top: '10%', left: '-10%',
+          top: '10%', left: '-10%', pointerEvents: 'none',
         }} />
         <div style={{
-          position: 'absolute', width: '500px', height: '500px',
+          position: 'absolute', width: '50vw', height: '50vw', maxWidth: '500px', maxHeight: '500px',
           borderRadius: '50%',
           background: 'radial-gradient(circle, rgba(170,0,255,0.1), transparent)',
-          bottom: '10%', right: '-5%',
+          bottom: '10%', right: '-5%', pointerEvents: 'none',
         }} />
 
-        {/* Floating Wine Glasses */}
+        {/* Floating emojis */}
         {['🍷', '🍾', '🥂', '🥃'].map((emoji, i) => (
           <div key={i} style={{
-            position: 'absolute',
-            fontSize: '48px',
-            opacity: 0.1,
-            top: `${20 + i * 20}%`,
-            left: i % 2 === 0 ? `${5 + i * 5}%` : 'auto',
-            right: i % 2 !== 0 ? `${5 + i * 5}%` : 'auto',
-            animation: `float${i} 3s ease-in-out infinite`,
+            position: 'absolute', fontSize: '32px', opacity: 0.08,
+            top: `${20 + i * 18}%`,
+            left: i % 2 === 0 ? `${4 + i * 4}%` : 'auto',
+            right: i % 2 !== 0 ? `${4 + i * 4}%` : 'auto',
+            pointerEvents: 'none',
           }}>
             {emoji}
           </div>
         ))}
 
-        <div style={{ textAlign: 'center', zIndex: 1, padding: '0 24px', maxWidth: '800px' }}>
+        <div style={{ textAlign: 'center', zIndex: 1, padding: '24px 20px', maxWidth: '800px', width: '100%' }}>
           <div style={{
             display: 'inline-block',
             background: 'rgba(224,68,114,0.15)',
             border: '1px solid rgba(224,68,114,0.3)',
-            borderRadius: '20px', padding: '6px 20px',
-            color: '#e04472', fontSize: '13px',
-            letterSpacing: '2px', marginBottom: '24px',
+            borderRadius: '20px', padding: '6px 16px',
+            color: '#e04472', fontSize: '11px',
+            letterSpacing: '2px', marginBottom: '20px',
           }}>
             ✨ PREMIUM WINE COLLECTION
           </div>
 
+          {/* Responsive H1 */}
           <h1 style={{
-            color: 'white', fontSize: '64px', fontWeight: '800',
-            lineHeight: 1.1, marginBottom: '24px',
+            color: 'white', fontWeight: '800',
+            lineHeight: 1.1, marginBottom: '20px',
+            fontSize: 'clamp(32px, 8vw, 64px)',
           }}>
             Discover the
             <span style={{
               background: 'linear-gradient(135deg, #e04472, #aa00ff)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
+              display: 'block',
             }}> Perfect Wine</span>
           </h1>
 
           <p style={{
-            color: '#9ca3af', fontSize: '18px', lineHeight: 1.7,
-            marginBottom: '40px', maxWidth: '600px', margin: '0 auto 40px',
+            color: '#9ca3af', lineHeight: 1.7,
+            marginBottom: '32px', maxWidth: '560px',
+            margin: '0 auto 32px',
+            fontSize: 'clamp(14px, 3vw, 18px)',
+            padding: '0 8px',
           }}>
             Explore our curated collection of premium wines, spirits, and more.
             From elegant reds to crisp whites — find your perfect bottle.
           </p>
 
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+          {/* CTA Buttons */}
+          <div style={{
+            display: 'flex', gap: '12px', justifyContent: 'center',
+            flexWrap: 'wrap', padding: '0 16px',
+          }}>
             <button onClick={() => navigate('/shop')} style={{
               background: 'linear-gradient(135deg, #e04472, #aa00ff)',
               border: 'none', borderRadius: '12px',
-              padding: '16px 40px', color: 'white',
-              fontWeight: '700', cursor: 'pointer', fontSize: '16px',
+              padding: '14px 32px', color: 'white',
+              fontWeight: '700', cursor: 'pointer',
+              fontSize: 'clamp(14px, 3vw, 16px)',
               boxShadow: '0 8px 32px rgba(224,68,114,0.4)',
               transition: 'transform 0.2s',
+              minWidth: '140px',
             }}
               onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
               onMouseLeave={e => e.target.style.transform = 'scale(1)'}
@@ -124,28 +133,22 @@ useEffect(() => {
             <button onClick={() => navigate('/contact')} style={{
               background: 'transparent',
               border: '1px solid rgba(255,255,255,0.2)',
-              borderRadius: '12px', padding: '16px 40px',
+              borderRadius: '12px', padding: '14px 32px',
               color: 'white', fontWeight: '600',
-              cursor: 'pointer', fontSize: '16px',
+              cursor: 'pointer',
+              fontSize: 'clamp(14px, 3vw, 16px)',
               transition: 'all 0.2s',
-            }}
-              onMouseEnter={e => {
-                e.target.style.background = 'rgba(255,255,255,0.05)';
-                e.target.style.borderColor = 'rgba(224,68,114,0.5)';
-              }}
-              onMouseLeave={e => {
-                e.target.style.background = 'transparent';
-                e.target.style.borderColor = 'rgba(255,255,255,0.2)';
-              }}
-            >
+              minWidth: '140px',
+            }}>
               📞 Contact Us
             </button>
           </div>
 
           {/* Stats */}
           <div style={{
-            display: 'flex', gap: '48px', justifyContent: 'center',
-            marginTop: '64px',
+            display: 'flex', gap: 'clamp(24px, 6vw, 48px)',
+            justifyContent: 'center', marginTop: '48px',
+            flexWrap: 'wrap',
           }}>
             {[
               { value: '50+', label: 'Premium Wines' },
@@ -154,34 +157,36 @@ useEffect(() => {
             ].map((stat, i) => (
               <div key={i} style={{ textAlign: 'center' }}>
                 <p style={{
-                  color: 'white', fontSize: '32px', fontWeight: '800',
+                  fontWeight: '800',
                   background: 'linear-gradient(135deg, #e04472, #aa00ff)',
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                  fontSize: 'clamp(24px, 5vw, 32px)',
                 }}>
                   {stat.value}
                 </p>
-                <p style={{ color: '#6b7280', fontSize: '13px' }}>{stat.label}</p>
+                <p style={{ color: '#6b7280', fontSize: '12px' }}>{stat.label}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Categories Section */}
-      <div style={{ padding: '80px 64px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <h2 style={{ color: 'white', fontSize: '36px', fontWeight: '700', marginBottom: '12px' }}>
+      {/* ── Categories Section ── */}
+      <div style={{ padding: 'clamp(40px, 8vw, 80px) clamp(16px, 5vw, 64px)' }}>
+        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+          <h2 style={{
+            color: 'white', fontWeight: '700', marginBottom: '10px',
+            fontSize: 'clamp(24px, 5vw, 36px)',
+          }}>
             Browse by Category
           </h2>
-          <p style={{ color: '#6b7280', fontSize: '15px' }}>
-            Find your favorite type of drink
-          </p>
+          <p style={{ color: '#6b7280', fontSize: '14px' }}>Find your favorite type of drink</p>
         </div>
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-          gap: '16px',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+          gap: '12px',
         }}>
           {categories.map((cat, i) => {
             const colors = ['#e04472', '#aa00ff', '#ff6600', '#00ffcc', '#ffcc00', '#00aaff'];
@@ -192,7 +197,7 @@ useEffect(() => {
                 style={{
                   background: `${colors[i % colors.length]}10`,
                   border: `1px solid ${colors[i % colors.length]}25`,
-                  borderRadius: '16px', padding: '24px 16px',
+                  borderRadius: '14px', padding: '20px 12px',
                   textAlign: 'center', cursor: 'pointer',
                   transition: 'transform 0.2s, box-shadow 0.2s',
                 }}
@@ -205,28 +210,35 @@ useEffect(() => {
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <div style={{ fontSize: '36px', marginBottom: '8px' }}>{icons[i % icons.length]}</div>
-                <p style={{ color: 'white', fontWeight: '500', fontSize: '13px' }}>{cat.name}</p>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>{icons[i % icons.length]}</div>
+                <p style={{ color: 'white', fontWeight: '500', fontSize: '12px' }}>{cat.name}</p>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Featured Products */}
-      <div style={{ padding: '0 64px 80px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '48px' }}>
+      {/* ── Featured Products ── */}
+      <div style={{ padding: '0 clamp(16px, 5vw, 64px) clamp(40px, 8vw, 80px)' }}>
+        <div style={{
+          display: 'flex', justifyContent: 'space-between',
+          alignItems: 'center', marginBottom: '36px',
+          flexWrap: 'wrap', gap: '12px',
+        }}>
           <div>
-            <h2 style={{ color: 'white', fontSize: '36px', fontWeight: '700', marginBottom: '8px' }}>
+            <h2 style={{
+              color: 'white', fontWeight: '700', marginBottom: '6px',
+              fontSize: 'clamp(22px, 5vw, 36px)',
+            }}>
               Featured Wines
             </h2>
-            <p style={{ color: '#6b7280', fontSize: '15px' }}>Hand picked for you</p>
+            <p style={{ color: '#6b7280', fontSize: '14px' }}>Hand picked for you</p>
           </div>
           <button onClick={() => navigate('/shop')} style={{
             background: 'transparent',
             border: '1px solid rgba(224,68,114,0.4)',
-            borderRadius: '10px', padding: '10px 24px',
-            color: '#e04472', cursor: 'pointer', fontSize: '14px', fontWeight: '500',
+            borderRadius: '10px', padding: '10px 20px',
+            color: '#e04472', cursor: 'pointer', fontSize: '13px', fontWeight: '500',
           }}>
             View All →
           </button>
@@ -239,8 +251,8 @@ useEffect(() => {
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-            gap: '20px',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(200px, 100%), 1fr))',
+            gap: '16px',
           }}>
             {featured.map((product, i) => (
               <WineCard key={product.id} product={product} index={i} />
@@ -249,19 +261,26 @@ useEffect(() => {
         )}
       </div>
 
-      {/* Why Choose Us */}
+      {/* ── Why Choose Us ── */}
       <div style={{
-        padding: '80px 64px',
+        padding: 'clamp(40px, 8vw, 80px) clamp(16px, 5vw, 64px)',
         background: 'rgba(255,255,255,0.02)',
         borderTop: '1px solid rgba(255,255,255,0.05)',
         borderBottom: '1px solid rgba(255,255,255,0.05)',
       }}>
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <h2 style={{ color: 'white', fontSize: '36px', fontWeight: '700', marginBottom: '12px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+          <h2 style={{
+            color: 'white', fontWeight: '700', marginBottom: '10px',
+            fontSize: 'clamp(22px, 5vw, 36px)',
+          }}>
             Why Choose Us?
           </h2>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+          gap: '16px',
+        }}>
           {[
             { icon: '🍷', title: 'Premium Quality', desc: 'Only the finest wines from around the world' },
             { icon: '🚚', title: 'Fast Delivery', desc: 'Same day delivery available in select areas' },
@@ -271,15 +290,15 @@ useEffect(() => {
             <div key={i} style={{
               background: 'rgba(255,255,255,0.03)',
               border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '16px', padding: '28px',
+              borderRadius: '16px', padding: '24px',
               textAlign: 'center',
               transition: 'transform 0.2s',
             }}
               onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
               onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              <div style={{ fontSize: '40px', marginBottom: '16px' }}>{item.icon}</div>
-              <h3 style={{ color: 'white', fontWeight: '600', marginBottom: '8px', fontSize: '16px' }}>
+              <div style={{ fontSize: '36px', marginBottom: '14px' }}>{item.icon}</div>
+              <h3 style={{ color: 'white', fontWeight: '600', marginBottom: '8px', fontSize: '15px' }}>
                 {item.title}
               </h3>
               <p style={{ color: '#6b7280', fontSize: '13px', lineHeight: 1.6 }}>{item.desc}</p>

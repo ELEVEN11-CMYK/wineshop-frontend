@@ -11,98 +11,204 @@ const CustomerNavbar = () => {
   const { isDark, navBg, border, toggleTheme } = useTheme();
 
   const links = [
-    { path: '/', label: 'Home' },
-    { path: '/shop', label: 'Shop' },
-    { path: '/my-orders', label: 'My Orders' },
-    { path: '/contact', label: 'Contact' },
+    { path: '/', label: '🏠 Home' },
+    { path: '/shop', label: '🍷 Shop' },
+    { path: '/my-orders', label: '📦 My Orders' },
+    { path: '/contact', label: '📞 Contact' },
   ];
 
   const customer = JSON.parse(localStorage.getItem('customer') || 'null');
 
   return (
-    <nav style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      background: navBg,
-      backdropFilter: 'blur(20px)',
-      borderBottom: `1px solid ${border}`,
-      padding: '0 24px',
-      height: '70px',
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    }}>
-      {/* Logo */}
-      <div onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{ fontSize: '28px' }}>🍷</span>
-        <div>
-          <p style={{ color: 'white', fontWeight: 'bold', fontSize: '18px', lineHeight: 1 }}>Wine Shop</p>
-          <p style={{ color: '#e04472', fontSize: '10px', letterSpacing: '2px' }}>PREMIUM WINES</p>
+    <>
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        background: navBg,
+        backdropFilter: 'blur(20px)',
+        borderBottom: `1px solid ${border}`,
+        padding: '0 16px',
+        height: '70px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        {/* Logo */}
+        <div onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '24px' }}>🍷</span>
+          <div>
+            <p style={{ color: 'white', fontWeight: 'bold', fontSize: '16px', lineHeight: 1 }}>Wine Shop</p>
+            <p style={{ color: '#e04472', fontSize: '9px', letterSpacing: '2px' }}>PREMIUM WINES</p>
+          </div>
         </div>
-      </div>
 
-      {/* Desktop Links */}
-      <div style={{ display: 'flex', gap: '32px' }} className="desktop-nav">
-        {links.map(link => (
-          <button key={link.path} onClick={() => navigate(link.path)} style={{
+        {/* Desktop Links */}
+        <div style={{ display: 'flex', gap: '24px' }} className="desktop-nav">
+          {links.map(link => (
+            <button key={link.path} onClick={() => navigate(link.path)} style={{
+              background: 'none', border: 'none',
+              color: location.pathname === link.path ? '#e04472' : '#9ca3af',
+              fontSize: '14px', fontWeight: '500', cursor: 'pointer',
+              borderBottom: location.pathname === link.path ? '2px solid #e04472' : '2px solid transparent',
+              paddingBottom: '4px', transition: 'all 0.2s',
+            }}>
+              {link.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Right Side */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+          {/* Theme Toggle */}
+          <button onClick={toggleTheme} style={{
             background: 'none', border: 'none',
+            cursor: 'pointer', fontSize: '18px', padding: '4px',
+          }}>
+            {isDark ? '☀️' : '🌙'}
+          </button>
+
+          {/* Cart */}
+          <button onClick={() => navigate('/cart')} style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            position: 'relative', fontSize: '22px', padding: '4px',
+          }}>
+            🛒
+            {totalItems > 0 && (
+              <span style={{
+                position: 'absolute', top: '-4px', right: '-4px',
+                background: '#e04472', color: 'white',
+                borderRadius: '50%', width: '18px', height: '18px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '10px', fontWeight: 'bold',
+              }}>
+                {totalItems}
+              </span>
+            )}
+          </button>
+
+          {/* Auth — Desktop only */}
+          {customer ? (
+            <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div onClick={() => navigate('/profile')} style={{
+                width: '32px', height: '32px', borderRadius: '50%',
+                background: 'linear-gradient(135deg, #e04472, #aa00ff)',
+                display: 'flex', alignItems: 'center',
+                justifyContent: 'center', color: 'white',
+                fontWeight: 'bold', fontSize: '14px', cursor: 'pointer',
+              }}>
+                {customer.fullName?.charAt(0)}
+              </div>
+              <button onClick={() => {
+                localStorage.removeItem('customer');
+                navigate('/');
+              }} style={{
+                background: 'rgba(239,68,68,0.15)',
+                border: '1px solid rgba(239,68,68,0.3)',
+                borderRadius: '8px', padding: '6px 12px',
+                color: '#f87171', cursor: 'pointer', fontSize: '12px',
+              }}>
+                Logout
+              </button>
+            </div>
+          ) : (
+            <button className="desktop-nav" onClick={() => {
+              localStorage.setItem('redirectAfterLogin', '/');
+              navigate('/customer-login');
+            }} style={{
+              background: 'linear-gradient(135deg, #e04472, #aa00ff)',
+              border: 'none', borderRadius: '8px',
+              padding: '8px 16px', color: 'white',
+              fontWeight: '600', cursor: 'pointer', fontSize: '13px',
+            }}>
+              Login
+            </button>
+          )}
+
+          {/* Hamburger */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="hamburger"
+            style={{
+              background: menuOpen ? 'rgba(224,68,114,0.15)' : 'none',
+              border: menuOpen ? '1px solid rgba(224,68,114,0.3)' : '1px solid transparent',
+              borderRadius: '8px',
+              color: 'white', cursor: 'pointer',
+              fontSize: '20px',
+              width: '40px', height: '40px',
+              display: 'none',
+              alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.2s',
+            }}>
+            {menuOpen ? '✕' : '☰'}
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile Menu Overlay */}
+      {menuOpen && (
+        <div style={{
+          position: 'fixed', top: '70px', left: 0, right: 0, bottom: 0,
+          zIndex: 99,
+          background: 'rgba(5,0,15,0.6)',
+          backdropFilter: 'blur(4px)',
+        }} onClick={() => setMenuOpen(false)} />
+      )}
+
+      {/* Mobile Menu Drawer */}
+      <div style={{
+        position: 'fixed', top: '70px', left: 0, right: 0,
+        zIndex: 100,
+        background: 'rgba(5,0,15,0.98)',
+        borderBottom: '1px solid rgba(224,68,114,0.2)',
+        padding: menuOpen ? '20px 16px 24px' : '0 16px',
+        maxHeight: menuOpen ? '500px' : '0',
+        overflow: 'hidden',
+        transition: 'max-height 0.35s cubic-bezier(0.4,0,0.2,1), padding 0.35s',
+        display: 'flex', flexDirection: 'column', gap: '6px',
+      }}>
+        {/* Nav Links */}
+        {links.map(link => (
+          <button key={link.path} onClick={() => { navigate(link.path); setMenuOpen(false); }} style={{
+            background: location.pathname === link.path ? 'rgba(224,68,114,0.12)' : 'transparent',
+            border: location.pathname === link.path ? '1px solid rgba(224,68,114,0.25)' : '1px solid transparent',
+            borderRadius: '10px',
             color: location.pathname === link.path ? '#e04472' : '#9ca3af',
-            fontSize: '14px', fontWeight: '500', cursor: 'pointer',
-            borderBottom: location.pathname === link.path ? '2px solid #e04472' : '2px solid transparent',
-            paddingBottom: '4px', transition: 'all 0.2s',
+            fontSize: '15px', fontWeight: '500', cursor: 'pointer',
+            padding: '13px 16px', textAlign: 'left',
+            transition: 'all 0.15s',
           }}>
             {link.label}
           </button>
         ))}
-      </div>
 
-        {/* Theme Toggle */}
-        <button onClick={toggleTheme} style={{
-          background: 'none', border: 'none',
-          cursor: 'pointer', fontSize: '20px',
-          padding: '4px',
-        }}>
-          {isDark ? '☀️' : '🌙'}
-        </button>
+        {/* Divider */}
+        <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '8px 0' }} />
 
-      {/* Right Side */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* Cart */}
-        <button onClick={() => navigate('/cart')} style={{
-          background: 'none', border: 'none', cursor: 'pointer',
-          position: 'relative', fontSize: '22px',
-        }}>
-          🛒
-          {totalItems > 0 && (
-            <span style={{
-              position: 'absolute', top: '-8px', right: '-8px',
-              background: '#e04472', color: 'white',
-              borderRadius: '50%', width: '18px', height: '18px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '10px', fontWeight: 'bold',
-            }}>
-              {totalItems}
-            </span>
-          )}
-        </button>
-
-        {/* Auth */}
+        {/* Auth in mobile menu */}
         {customer ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div onClick={() => navigate('/profile')} style={{
-              width: '32px', height: '32px', borderRadius: '50%',
-              background: 'linear-gradient(135deg, #e04472, #aa00ff)',
-              display: 'flex', alignItems: 'center',
-              justifyContent: 'center', color: 'white',
-              fontWeight: 'bold', fontSize: '14px', cursor: 'pointer',
-            }}>
-              {customer.fullName?.charAt(0)}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div onClick={() => { navigate('/profile'); setMenuOpen(false); }} style={{
+                width: '36px', height: '36px', borderRadius: '50%',
+                background: 'linear-gradient(135deg, #e04472, #aa00ff)',
+                display: 'flex', alignItems: 'center',
+                justifyContent: 'center', color: 'white',
+                fontWeight: 'bold', fontSize: '15px', cursor: 'pointer',
+              }}>
+                {customer.fullName?.charAt(0)}
+              </div>
+              <div>
+                <p style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>{customer.fullName}</p>
+                <p style={{ color: '#6b7280', fontSize: '11px' }}>Tap avatar for profile</p>
+              </div>
             </div>
             <button onClick={() => {
               localStorage.removeItem('customer');
               navigate('/');
+              setMenuOpen(false);
             }} style={{
               background: 'rgba(239,68,68,0.15)',
               border: '1px solid rgba(239,68,68,0.3)',
-              borderRadius: '8px', padding: '6px 12px',
-              color: '#f87171', cursor: 'pointer', fontSize: '12px',
+              borderRadius: '8px', padding: '8px 14px',
+              color: '#f87171', cursor: 'pointer', fontSize: '13px',
             }}>
               Logout
             </button>
@@ -111,50 +217,19 @@ const CustomerNavbar = () => {
           <button onClick={() => {
             localStorage.setItem('redirectAfterLogin', '/');
             navigate('/customer-login');
+            setMenuOpen(false);
           }} style={{
             background: 'linear-gradient(135deg, #e04472, #aa00ff)',
-            border: 'none', borderRadius: '8px',
-            padding: '8px 20px', color: 'white',
-            fontWeight: '600', cursor: 'pointer', fontSize: '13px',
+            border: 'none', borderRadius: '10px',
+            padding: '13px', color: 'white',
+            fontWeight: '600', cursor: 'pointer', fontSize: '15px',
+            textAlign: 'center',
           }}>
-            Login
+            🔐 Login to Your Account
           </button>
         )}
-
-        {/* Hamburger Menu */}
-        <button onClick={() => setMenuOpen(!menuOpen)} style={{
-          background: 'none', border: 'none',
-          color: 'white', cursor: 'pointer',
-          fontSize: '24px', display: 'none',
-        }} className="hamburger">
-          {menuOpen ? '✕' : '☰'}
-        </button>
       </div>
-
-      {/* Mobile Menu */}
-      {menuOpen && (
-        <div style={{
-          position: 'absolute', top: '70px', left: 0, right: 0,
-          background: 'rgba(5,0,15,0.98)',
-          borderBottom: '1px solid rgba(224,68,114,0.2)',
-          padding: '16px 24px',
-          display: 'flex', flexDirection: 'column', gap: '8px',
-          zIndex: 99,
-        }}>
-          {links.map(link => (
-            <button key={link.path} onClick={() => { navigate(link.path); setMenuOpen(false); }} style={{
-              background: location.pathname === link.path ? 'rgba(224,68,114,0.1)' : 'none',
-              border: 'none', borderRadius: '8px',
-              color: location.pathname === link.path ? '#e04472' : '#9ca3af',
-              fontSize: '15px', fontWeight: '500', cursor: 'pointer',
-              padding: '12px 16px', textAlign: 'left',
-            }}>
-              {link.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </nav>
+    </>
   );
 };
 

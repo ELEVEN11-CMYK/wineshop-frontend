@@ -58,6 +58,7 @@ body {
 .table-row {
   @apply border-b border-gray-800 hover:bg-dark-100 transition-all duration-150;
 }
+
 @keyframes popIn {
   0% { transform: scale(0.5); opacity: 0; }
   70% { transform: scale(1.1); }
@@ -74,47 +75,74 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
-  .desktop-nav { display: none !important; }
-  .hamburger { display: block !important; }
+/* ── Desktop Nav & Hamburger ── */
+.desktop-nav {
+  display: flex !important;
 }
 
-@media (max-width: 768px) {
-  /* Home page */
-  h1 { font-size: 36px !important; }
+.hamburger {
+  display: none !important;
+}
 
-  /* Shop grid */
-  .shop-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+/* ── Tablet / Mobile ── */
+@media (max-width: 768px) {
+  .desktop-nav {
+    display: none !important;
   }
 
-  /* Cart */
+  .hamburger {
+    display: flex !important;
+  }
+
+  /* Admin Navbar shifts back to full width */
+  .admin-topbar {
+    left: 0 !important;
+  }
+
+  /* Home hero heading */
+  h1 {
+    font-size: clamp(28px, 8vw, 48px) !important;
+  }
+
+  /* Shop filter sidebar hidden on mobile (handled in component) */
+  .desktop-sidebar {
+    display: none !important;
+  }
+
+  /* Cart stacks vertically */
   .cart-grid {
     grid-template-columns: 1fr !important;
   }
 
-  /* Contact */
+  /* Contact stacks vertically */
   .contact-grid {
     grid-template-columns: 1fr !important;
   }
 
-  /* Wine Detail */
+  /* Wine detail stacks vertically */
   .wine-detail-grid {
     grid-template-columns: 1fr !important;
   }
 
-  /* Footer */
+  /* Footer responsive */
   .footer-grid {
     grid-template-columns: 1fr 1fr !important;
   }
 }
 
 @media (max-width: 480px) {
+  /* Single column shop grid on very small screens */
   .shop-grid {
     grid-template-columns: 1fr !important;
   }
+
+  /* Single column footer */
   .footer-grid {
     grid-template-columns: 1fr !important;
+  }
+
+  /* Larger tap targets for buttons */
+  button {
+    min-height: 40px;
   }
 }

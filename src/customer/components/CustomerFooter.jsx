@@ -3,20 +3,27 @@ import { useTheme } from '../../context/ThemeContext';
 
 const CustomerFooter = () => {
   const navigate = useNavigate();
-  const { bg, text, textSecondary, border } = useTheme();
+  const { bg, border } = useTheme();
+
   return (
     <footer style={{
       background: bg === '#05000f' ? '#050008' : '#f0ebff',
       borderTop: `1px solid ${border}`,
-      padding: '48px 64px 24px',
+      padding: 'clamp(32px, 6vw, 48px) clamp(16px, 5vw, 64px) 24px',
     }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '32px', marginBottom: '40px' }}>
+      {/* Grid — 4 cols desktop, 2 cols tablet, 1 col mobile */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))',
+        gap: '28px',
+        marginBottom: '32px',
+      }}>
 
         {/* Brand */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-            <span style={{ fontSize: '28px' }}>🍷</span>
-            <p style={{ color: 'white', fontWeight: 'bold', fontSize: '18px' }}>Wine Shop</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+            <span style={{ fontSize: '26px' }}>🍷</span>
+            <p style={{ color: 'white', fontWeight: 'bold', fontSize: '17px' }}>Wine Shop</p>
           </div>
           <p style={{ color: '#6b7280', fontSize: '13px', lineHeight: 1.6 }}>
             Premium wines from around the world. Delivered to your doorstep.
@@ -25,9 +32,9 @@ const CustomerFooter = () => {
 
         {/* Quick Links */}
         <div>
-          <h4 style={{ color: 'white', fontWeight: '600', marginBottom: '16px', fontSize: '14px' }}>Quick Links</h4>
+          <h4 style={{ color: 'white', fontWeight: '600', marginBottom: '14px', fontSize: '14px' }}>Quick Links</h4>
           {[
-            { label: 'Home', path: '/home' },
+            { label: 'Home', path: '/' },
             { label: 'Shop', path: '/shop' },
             { label: 'My Orders', path: '/my-orders' },
             { label: 'Contact', path: '/contact' },
@@ -48,7 +55,7 @@ const CustomerFooter = () => {
 
         {/* Categories */}
         <div>
-          <h4 style={{ color: 'white', fontWeight: '600', marginBottom: '16px', fontSize: '14px' }}>Categories</h4>
+          <h4 style={{ color: 'white', fontWeight: '600', marginBottom: '14px', fontSize: '14px' }}>Categories</h4>
           {['Red Wine', 'White Wine', 'Whisky', 'Vodka', 'Rum', 'Beer'].map(cat => (
             <button key={cat} onClick={() => navigate('/shop')} style={{
               display: 'block', background: 'none', border: 'none',
@@ -66,7 +73,7 @@ const CustomerFooter = () => {
 
         {/* Contact */}
         <div>
-          <h4 style={{ color: 'white', fontWeight: '600', marginBottom: '16px', fontSize: '14px' }}>Contact Us</h4>
+          <h4 style={{ color: 'white', fontWeight: '600', marginBottom: '14px', fontSize: '14px' }}>Contact Us</h4>
           {[
             { icon: '📍', text: 'Navsari, Gujarat, India' },
             { icon: '📱', text: '9898989898' },
@@ -81,37 +88,39 @@ const CustomerFooter = () => {
         </div>
       </div>
 
-      {/* Bottom */}
+      {/* Bottom Bar */}
       <div style={{
         borderTop: '1px solid rgba(255,255,255,0.08)',
-        paddingTop: '24px',
-        display: 'flex', justifyContent: 'space-between',
+        paddingTop: '20px',
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '12px',
       }}>
-        <p style={{ color: '#4b5563', fontSize: '13px' }}>
+        <p style={{ color: '#4b5563', fontSize: '12px' }}>
           © 2026 Wine Shop. All rights reserved.
         </p>
-        <p style={{ color: '#4b5563', fontSize: '13px' }}>
+        <p style={{ color: '#4b5563', fontSize: '12px' }}>
           Made with 🍷 in Gujarat, India
         </p>
         <button
-            onClick={() => window.location.href = '/admin-login'}
-            style={{
-              background: 'rgba(224,68,114,0.1)',
-              border: '1px solid rgba(224,68,114,0.3)',
-              borderRadius: '8px', padding: '8px 20px',
-              color: '#e04472', cursor: 'pointer',
-              fontSize: '13px', fontWeight: '500',
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(224,68,114,0.2)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(224,68,114,0.1)'}
-          >
-            🔐 Admin Login
-          </button>
+          onClick={() => window.location.href = '/admin-login'}
+          style={{
+            background: 'rgba(224,68,114,0.1)',
+            border: '1px solid rgba(224,68,114,0.3)',
+            borderRadius: '8px', padding: '7px 16px',
+            color: '#e04472', cursor: 'pointer',
+            fontSize: '12px', fontWeight: '500',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(224,68,114,0.2)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(224,68,114,0.1)'}
+        >
+          🔐 Admin Login
+        </button>
       </div>
     </footer>
   );
-  
 };
 
 export default CustomerFooter;
