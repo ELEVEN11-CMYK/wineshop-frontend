@@ -5,10 +5,7 @@ const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/admin-login" />;
-  // ✅ Only Admin and Staff can access dashboard
-  if (user.role !== 'Admin' && user.role !== 'Staff') {
-    return <Navigate to="/" />;
-  }
+  if (user.role !== 'Admin' && user.role !== 'Staff') return <Navigate to="/" />;
   return children;
 };
 

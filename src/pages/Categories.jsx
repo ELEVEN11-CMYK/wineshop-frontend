@@ -1,68 +1,87 @@
-import { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import Navbar from '../components/Navbar';
-import axios from '../api/axios';
+import { useState, useEffect } from "react";
+import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
+import axios from "../api/axios";
 
 const THEMES = [
-  { color: '#e04472', bg: 'linear-gradient(135deg, #4a0020, #1a0010)', icon: '🍷', label: 'Red Wines' },
-  { color: '#00aaff', bg: 'linear-gradient(135deg, #00204a, #00101a)', icon: '🥂', label: 'Sparkling' },
-  { color: '#aa00ff', bg: 'linear-gradient(135deg, #2a004a, #10001a)', icon: '🥃', label: 'Spirits' },
-  { color: '#ffcc00', bg: 'linear-gradient(135deg, #4a3a00, #1a1500)', icon: '🍺', label: 'Beers' },
-  { color: '#00ffcc', bg: 'linear-gradient(135deg, #004a3a, #001a15)', icon: '🫗', label: 'Cocktails' },
-  { color: '#ff6600', bg: 'linear-gradient(135deg, #4a1a00, #1a0a00)', icon: '🍹', label: 'Mocktails' },
+  { color: "#e04472", icon: "🍷" },
+  { color: "#00aaff", icon: "🥂" },
+  { color: "#aa00ff", icon: "🥃" },
+  { color: "#ffcc00", icon: "🍺" },
+  { color: "#00ffcc", icon: "🫗" },
+  { color: "#ff6600", icon: "🍹" },
 ];
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
+  const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editCategory, setEditCategory] = useState(null);
-  const [form, setForm] = useState({ name: '', description: '' });
+  const [form, setForm] = useState({ name: "", description: "" });
+  const [search, setSearch] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    const result = categories.filter(
+      (c) =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        (c.description || "").toLowerCase().includes(search.toLowerCase())
+    );
+    setFiltered(result);
+  }, [search, categories]);
 
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/categories');
+      const res = await axios.get("/categories");
       setCategories(res.data);
+      setFiltered(res.data);
     } catch (err) {
-      console.log(err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchCategories(); }, []);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       if (editCategory) {
         await axios.put(`/categories/${editCategory.id}`, form);
       } else {
-        await axios.post('/categories', form);
+        await axios.post("/categories", form);
       }
+
       setShowModal(false);
       setEditCategory(null);
-      setForm({ name: '', description: '' });
+      setForm({ name: "", description: "" });
+
       fetchCategories();
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   };
 
   const handleEdit = (cat) => {
     setEditCategory(cat);
-    setForm({ name: cat.name, description: cat.description || '' });
+    setForm({ name: cat.name, description: cat.description || "" });
     setShowModal(true);
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this category?')) return;
+    if (!window.confirm("Delete this category?")) return;
+
     try {
       await axios.delete(`/categories/${id}`);
       fetchCategories();
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   };
 
@@ -71,299 +90,371 @@ const Categories = () => {
       await axios.patch(`/categories/${id}/toggle-status`);
       fetchCategories();
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   };
 
-  const inputStyle = {
-    width: '100%',
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: '10px',
-    padding: '10px 14px',
-    color: 'white',
-    outline: 'none',
-    fontSize: '14px',
-    boxSizing: 'border-box',
-  };
-
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0a0010' }}>
-      <Sidebar />
-      <div style={{ flex: 1, marginLeft: '256px' }}>
-        <Navbar title="Categories" />
-        <div style={{ padding: '24px', marginTop: '64px' }}>
+    <div style={{ display: "flex", minHeight: "100vh", background: "#0a0010" }}>
+      {/* Sidebar */}
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <div>
-              <h2 style={{ color: 'white', fontSize: '24px', fontWeight: 'bold' }}>
-                📂 Categories
-              </h2>
-              <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
-                Manage your wine categories
-              </p>
-            </div>
-            <button
-              onClick={() => { setForm({ name: '', description: '' }); setEditCategory(null); setShowModal(true); }}
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 40,
+          }}
+        />
+      )}
+
+      {/* Main content */}
+      <div
+        style={{
+          flex: 1,
+          padding: "20px",
+          background: "#0a0010",
+          transition: "margin-left 0.3s",
+          marginLeft: "0px",
+        }}
+      >
+        {/* Navbar with Hamburger */}
+        <Navbar title="Categories" onMenuClick={() => setSidebarOpen(true)} />
+
+        {/* HEADER */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "10px",
+            marginTop: "20px",
+            marginBottom: "20px",
+          }}
+        >
+          <div>
+            <h2
               style={{
-                background: 'linear-gradient(135deg, #e04472, #aa00ff)',
-                border: 'none', borderRadius: '10px',
-                padding: '10px 20px', color: 'white',
-                fontWeight: '600', cursor: 'pointer',
-                fontSize: '14px',
-                boxShadow: '0 4px 15px rgba(224,68,114,0.3)',
+                color: "white",
+                fontSize: "clamp(18px,2.5vw,22px)",
+                fontWeight: "600",
               }}
             >
-              + Add Category
-            </button>
+              📂 Categories
+            </h2>
+            <p style={{ color: "#9ca3af", fontSize: "14px" }}>
+              {categories.length} categories in your inventory
+            </p>
           </div>
 
-          {/* Stats */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '16px',
-            marginBottom: '24px',
-          }}>
-            {[
-              { label: 'Total Categories', value: categories.length, color: '#aa00ff', bg: 'linear-gradient(135deg, #1a004a, #0d0025)' },
-              { label: 'Active', value: categories.filter(c => c.isActive).length, color: '#4ade80', bg: 'linear-gradient(135deg, #1a4a00, #0d2500)' },
-              { label: 'Inactive', value: categories.filter(c => !c.isActive).length, color: '#f87171', bg: 'linear-gradient(135deg, #4a0000, #250000)' },
-            ].map((s, i) => (
-              <div key={i} style={{
-                background: s.bg,
-                borderRadius: '16px',
-                padding: '24px',
-                border: `1px solid ${s.color}30`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px',
-              }}>
-                <div style={{
-                  fontSize: '40px',
-                  fontWeight: 'bold',
-                  color: s.color,
-                }}>
-                  {s.value}
-                </div>
-                <div>
-                  <p style={{ color: '#9ca3af', fontSize: '13px' }}>{s.label}</p>
-                  <div style={{
-                    width: '40px',
-                    height: '3px',
-                    background: s.color,
-                    borderRadius: '2px',
-                    marginTop: '6px',
-                  }} />
-                </div>
-              </div>
-            ))}
-          </div>
+          <button
+            onClick={() => {
+              setForm({ name: "", description: "" });
+              setEditCategory(null);
+              setShowModal(true);
+            }}
+            style={{
+              padding: "10px 18px",
+              borderRadius: "10px",
+              border: "none",
+              background: "linear-gradient(135deg,#e04472,#aa00ff)",
+              color: "white",
+              cursor: "pointer",
+            }}
+          >
+            + Add Category
+          </button>
+        </div>
 
-          {/* Categories List */}
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '60px', color: '#e04472' }}>
-              Loading... 🍷
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {categories.map((cat, i) => {
-                const theme = THEMES[i % THEMES.length];
-                return (
-                  <div key={cat.id} style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${theme.color}25`,
-                    borderRadius: '16px',
-                    padding: '20px 24px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '20px',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
+        {/* SEARCH */}
+        <div style={{ marginBottom: "24px", position: "relative" }}>
+          <span
+            style={{
+              position: "absolute",
+              left: "12px",
+              top: "9px",
+              color: "#9ca3af",
+            }}
+          >
+            🔍
+          </span>
+          <input
+            placeholder="Search by name or description..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "10px 10px 10px 36px",
+              borderRadius: "12px",
+              border: "1px solid #2d0039",
+              background: "#120018",
+              color: "white",
+              outline: "none",
+            }}
+          />
+        </div>
+
+        {/* STATS */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))",
+            gap: "16px",
+            marginBottom: "24px",
+          }}
+        >
+          <StatCard title="Total" value={categories.length} />
+          <StatCard
+            title="Active"
+            value={categories.filter((c) => c.isActive).length}
+          />
+          <StatCard
+            title="Inactive"
+            value={categories.filter((c) => !c.isActive).length}
+          />
+        </div>
+
+        {/* LIST */}
+        {loading ? (
+          <div style={{ color: "white" }}>Loading...</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            {filtered.map((cat, i) => {
+              const theme = THEMES[i % THEMES.length];
+
+              return (
+                <div
+                  key={cat.id}
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    gap: "16px",
+                    padding: "12px 16px",
+                    borderRadius: "14px",
+                    background: "#120018",
+                    border: "1px solid #1f2937",
+                    transition: "all 0.25s ease",
                   }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.transform = 'translateX(4px)';
-                      e.currentTarget.style.boxShadow = `0 4px 24px ${theme.color}20`;
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.transform = 'translateX(0)';
-                      e.currentTarget.style.boxShadow = 'none';
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-4px)";
+                    e.currentTarget.style.borderColor = "#7b2cff";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.borderColor = "#1f2937";
+                  }}
+                >
+                  <div style={{ fontSize: "22px", color: theme.color }}>{theme.icon}</div>
+
+                  <div style={{ flex: "1 1 220px", color: "white" }}>
+                    <h3 style={{ fontSize: "14px", marginBottom: "2px", fontWeight: "500" }}>
+                      {cat.name}
+                      <span
+                        style={{
+                          marginLeft: "8px",
+                          padding: "3px 10px",
+                          borderRadius: "20px",
+                          fontSize: "11px",
+                          fontWeight: "500",
+                          background: cat.isActive
+                            ? "rgba(16,185,129,0.15)"
+                            : "rgba(239,68,68,0.15)",
+                          color: cat.isActive ? "#34d399" : "#f87171",
+                          border: cat.isActive
+                            ? "1px solid rgba(16,185,129,0.3)"
+                            : "1px solid rgba(239,68,68,0.3)",
+                        }}
+                      >
+                        {cat.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </h3>
+
+                    <p style={{ color: "#9ca3af", fontSize: "clamp(12px,2vw,14px)" }}>
+                      {cat.description || "No description available"}
+                    </p>
+                  </div>
+
+                  <div style={{ color: "#9ca3af" }}>#{cat.id}</div>
+
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      onClick={() => handleEdit(cat)}
+                      style={{
+                        background: "#1e3a8a",
+                        border: "none",
+                        padding: "6px 8px",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        color: "white",
+                        fontSize: "13px",
+                      }}
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => handleToggle(cat.id)}
+                      style={{
+                        background: "#92400e",
+                        border: "none",
+                        padding: "6px 8px",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        color: "white",
+                        fontSize: "13px",
+                      }}
+                    >
+                      🔄
+                    </button>
+                    <button
+                      onClick={() => handleDelete(cat.id)}
+                      style={{
+                        background: "#7f1d1d",
+                        border: "none",
+                        padding: "6px 8px",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        color: "white",
+                        fontSize: "13px",
+                      }}
+                    >
+                      🗑
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* MODAL */}
+        {showModal && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.7)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "20px",
+              zIndex: 999,
+            }}
+          >
+            <div
+              style={{
+                background: "#120018",
+                padding: "26px",
+                borderRadius: "12px",
+                width: "100%",
+                maxWidth: "420px",
+                border: "1px solid #2d0039",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.6)",
+              }}
+            >
+              <h3
+                style={{
+                  color: "white",
+                  marginBottom: "20px",
+                  fontSize: "18px",
+                  fontWeight: "600",
+                }}
+              >
+                {editCategory ? "✏️ Edit Category" : "➕ Add Category"}
+              </h3>
+
+              <form onSubmit={handleSubmit}>
+                <label style={{ color: "#9ca3af", fontSize: "13px", display: "block", marginBottom: "5px" }}>
+                  Category Name
+                </label>
+                <input
+                  placeholder="Enter category name"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    marginBottom: "15px",
+                    borderRadius: "8px",
+                    border: "1px solid #2d0039",
+                    background: "#0a0010",
+                    color: "white",
+                    fontSize: "13px",
+                    outline: "none",
+                  }}
+                />
+
+                <label style={{ color: "#9ca3af", fontSize: "13px", display: "block", marginBottom: "5px" }}>
+                  Description
+                </label>
+                <textarea
+                  placeholder="Optional description..."
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    marginBottom: "18px",
+                    borderRadius: "8px",
+                    border: "1px solid #2d0039",
+                    background: "#0a0010",
+                    color: "white",
+                    fontSize: "13px",
+                    outline: "none",
+                    minHeight: "70px",
+                  }}
+                />
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    type="submit"
+                    style={{
+                      flex: 1,
+                      padding: "10px",
+                      borderRadius: "8px",
+                      border: "none",
+                      background: "linear-gradient(135deg,#e04472,#aa00ff)",
+                      color: "white",
+                      fontWeight: "500",
+                      cursor: "pointer",
                     }}
                   >
-                    {/* Left color bar */}
-                    <div style={{
-                      width: '4px',
-                      height: '60px',
-                      background: theme.color,
-                      borderRadius: '2px',
-                      flexShrink: 0,
-                    }} />
-
-                    {/* Icon */}
-                    <div style={{
-                      width: '56px',
-                      height: '56px',
-                      borderRadius: '14px',
-                      background: `${theme.color}15`,
-                      border: `1px solid ${theme.color}30`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '28px',
-                      flexShrink: 0,
-                    }}>
-                      {theme.icon}
-                    </div>
-
-                    {/* Info */}
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                        <h3 style={{ color: 'white', fontWeight: '600', fontSize: '16px' }}>
-                          {cat.name}
-                        </h3>
-                        <span style={{
-                          padding: '2px 10px',
-                          borderRadius: '20px',
-                          fontSize: '11px',
-                          background: cat.isActive ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)',
-                          color: cat.isActive ? '#4ade80' : '#f87171',
-                          border: `1px solid ${cat.isActive ? 'rgba(74,222,128,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                        }}>
-                          {cat.isActive ? '● Active' : '● Inactive'}
-                        </span>
-                      </div>
-                      <p style={{ color: '#6b7280', fontSize: '13px' }}>
-                        {cat.description || 'No description available'}
-                      </p>
-                    </div>
-
-                    {/* ID Badge */}
-                    <div style={{
-                      background: `${theme.color}15`,
-                      border: `1px solid ${theme.color}30`,
-                      borderRadius: '10px',
-                      padding: '8px 16px',
-                      textAlign: 'center',
-                      flexShrink: 0,
-                    }}>
-                      <p style={{ color: '#6b7280', fontSize: '10px' }}>ID</p>
-                      <p style={{ color: theme.color, fontWeight: 'bold', fontSize: '18px' }}>
-                        #{cat.id}
-                      </p>
-                    </div>
-
-                    {/* Actions */}
-                    <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                      <button onClick={() => handleEdit(cat)} style={{
-                        background: 'rgba(59,130,246,0.15)',
-                        border: '1px solid rgba(59,130,246,0.3)',
-                        borderRadius: '8px',
-                        padding: '8px 14px',
-                        color: '#60a5fa',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: '500',
-                      }}>
-                        ✏️ Edit
-                      </button>
-                      <button onClick={() => handleToggle(cat.id)} style={{
-                        background: 'rgba(245,158,11,0.15)',
-                        border: '1px solid rgba(245,158,11,0.3)',
-                        borderRadius: '8px',
-                        padding: '8px 14px',
-                        color: '#fbbf24',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: '500',
-                      }}>
-                        🔄
-                      </button>
-                      <button onClick={() => handleDelete(cat.id)} style={{
-                        background: 'rgba(239,68,68,0.15)',
-                        border: '1px solid rgba(239,68,68,0.3)',
-                        borderRadius: '8px',
-                        padding: '8px 14px',
-                        color: '#f87171',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                      }}>
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    style={{
+                      flex: 1,
+                      padding: "10px",
+                      borderRadius: "8px",
+                      border: "1px solid #2d0039",
+                      background: "transparent",
+                      color: "#9ca3af",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Modal */}
-      {showModal && (
-        <div style={{
-          position: 'fixed', inset: 0,
-          background: 'rgba(0,0,0,0.8)',
-          display: 'flex', alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 50,
-          backdropFilter: 'blur(4px)',
-        }}>
-          <div style={{
-            background: '#0d0018',
-            border: '1px solid rgba(224,68,114,0.3)',
-            borderRadius: '20px',
-            padding: '32px',
-            width: '100%',
-            maxWidth: '440px',
-            boxShadow: '0 25px 60px rgba(0,0,0,0.8)',
-          }}>
-            <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '600', marginBottom: '24px' }}>
-              {editCategory ? '✏️ Edit Category' : '+ Add New Category'}
-            </h3>
-            <form onSubmit={handleSubmit}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <input
-                  placeholder="Category Name *"
-                  style={inputStyle}
-                  value={form.name}
-                  onChange={e => setForm({ ...form, name: e.target.value })}
-                  required
-                />
-                <textarea
-                  placeholder="Description (optional)"
-                  style={{ ...inputStyle, height: '80px', resize: 'vertical' }}
-                  value={form.description}
-                  onChange={e => setForm({ ...form, description: e.target.value })}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-                <button type="submit" style={{
-                  flex: 1,
-                  background: 'linear-gradient(135deg, #e04472, #aa00ff)',
-                  border: 'none', borderRadius: '10px',
-                  padding: '12px', color: 'white',
-                  fontWeight: '600', cursor: 'pointer', fontSize: '15px',
-                }}>
-                  {editCategory ? 'Update' : 'Create'}
-                </button>
-                <button type="button"
-                  onClick={() => { setShowModal(false); setEditCategory(null); }}
-                  style={{
-                    flex: 1,
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '10px', padding: '12px',
-                    color: 'white', cursor: 'pointer', fontSize: '15px',
-                  }}>
-                  Cancel
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
+
+const StatCard = ({ title, value }) => (
+  <div style={{ background: "#140021", padding: "16px", borderRadius: "12px", color: "white" }}>
+    <h3 style={{ fontSize: "22px" }}>{value}</h3>
+    <p style={{ fontSize: "13px", color: "#9ca3af" }}>{title}</p>
+  </div>
+);
 
 export default Categories;

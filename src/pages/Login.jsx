@@ -3,6 +3,44 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from '../api/axios';
 
+const styles = `
+  .login-card {
+    background: rgba(10, 0, 20, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(224, 68, 114, 0.3);
+    border-radius: 20px;
+    padding: 36px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(224,68,114,0.15);
+  }
+  .login-input {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: white;
+    outline: none;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+  }
+  .login-input:focus { border-color: rgba(224,68,114,0.5); }
+  .login-btn {
+    width: 100%; padding: 14px;
+    border: none; border-radius: 10px;
+    color: white; font-weight: 700;
+    font-size: 16px; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(224,68,114,0.4);
+    transition: all 0.3s;
+  }
+
+  @media (max-width: 480px) {
+    .login-card { padding: 24px 20px; border-radius: 16px; }
+    .login-logo { font-size: 48px !important; }
+    .login-title { font-size: 26px !important; }
+  }
+`;
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,16 +53,19 @@ const Login = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
 
     const dancers = Array.from({ length: 8 }, (_, i) => ({
       x: (window.innerWidth / 9) * (i + 1),
       y: window.innerHeight - 150,
       phase: i * 0.8,
       speed: 0.05 + Math.random() * 0.03,
-      color: ['#e04472', '#aa00ff', '#ff6600', '#00ffcc',
-              '#ff0066', '#ffcc00', '#00aaff', '#ff44aa'][i],
+      color: ['#e04472', '#aa00ff', '#ff6600', '#00ffcc', '#ff0066', '#ffcc00', '#00aaff', '#ff44aa'][i],
       size: 0.8 + Math.random() * 0.4,
     }));
 
@@ -32,9 +73,7 @@ const Login = () => {
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
       r: 1 + Math.random() * 3,
-      color: ['#e04472', '#aa00ff', '#ff6600', '#00ffcc', '#ffcc00'][
-        Math.floor(Math.random() * 5)
-      ],
+      color: ['#e04472', '#aa00ff', '#ff6600', '#00ffcc', '#ffcc00'][Math.floor(Math.random() * 5)],
       speedY: -0.5 - Math.random() * 1,
       speedX: (Math.random() - 0.5) * 0.5,
       opacity: Math.random(),
@@ -43,8 +82,7 @@ const Login = () => {
     const beams = Array.from({ length: 6 }, (_, i) => ({
       x: (window.innerWidth / 7) * (i + 1),
       angle: -0.3 + i * 0.1,
-      color: ['#e0447230', '#aa00ff30', '#ff660030',
-              '#00ffcc30', '#ff006630', '#ffcc0030'][i],
+      color: ['#e0447230', '#aa00ff30', '#ff660030', '#00ffcc30', '#ff006630', '#ffcc0030'][i],
       speed: 0.02,
       dir: i % 2 === 0 ? 1 : -1,
     }));
@@ -155,9 +193,7 @@ const Login = () => {
       for (let i = 0; i < 20; i++) {
         const tileX = (canvas.width / 20) * i;
         const glow = Math.sin(time * 3 + i) > 0.7;
-        ctx.fillStyle = glow
-          ? `hsla(${(i * 18 + time * 30) % 360}, 100%, 50%, 0.15)`
-          : 'rgba(255,255,255,0.02)';
+        ctx.fillStyle = glow ? `hsla(${(i * 18 + time * 30) % 360}, 100%, 50%, 0.15)` : 'rgba(255,255,255,0.02)';
         ctx.fillRect(tileX, floorY, canvas.width / 20 - 1, 100);
       }
 
@@ -197,6 +233,11 @@ const Login = () => {
     const handleResize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      // Reposition dancers on resize
+      dancers.forEach((d, i) => {
+        d.x = (window.innerWidth / 9) * (i + 1);
+        d.y = window.innerHeight - 150;
+      });
     };
     window.addEventListener('resize', handleResize);
     return () => {
@@ -205,54 +246,49 @@ const Login = () => {
     };
   }, []);
 
- // In Login.jsx handleSubmit
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setError('');
-  try {
-    const res = await axios.post('/auth/login', { email, password });
-    const data = res.data;
-    localStorage.setItem('customer', JSON.stringify({
-      id: data.userId,
-      fullName: data.fullName,
-      email: data.email,
-      role: data.role,
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
-    }));
-    const redirectTo = localStorage.getItem('redirectAfterLogin');
-    localStorage.removeItem('redirectAfterLogin');
-    navigate(redirectTo || '/');
-  } catch (err) {
-    setError('Invalid email or password.');
-  } finally {
-    setLoading(false);
-  }
-};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const res = await axios.post('/auth/login', { email, password });
+      const data = res.data;
+      localStorage.setItem('customer', JSON.stringify({
+        id: data.userId,
+        fullName: data.fullName,
+        email: data.email,
+        role: data.role,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+      }));
+      const redirectTo = localStorage.getItem('redirectAfterLogin');
+      localStorage.removeItem('redirectAfterLogin');
+      navigate(redirectTo || '/');
+    } catch (err) {
+      setError('Invalid email or password.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden' }}>
-      <canvas ref={canvasRef} style={{
-        position: 'fixed', top: 0, left: 0,
-        width: '100%', height: '100%', zIndex: 0,
-      }} />
+      <style>{styles}</style>
+      <canvas ref={canvasRef} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }} />
 
       <div style={{
         position: 'relative', zIndex: 10,
         minHeight: '100vh',
         display: 'flex', alignItems: 'center',
-        justifyContent: 'center', padding: '20px',
+        justifyContent: 'center',
+        padding: '16px',
       }}>
         <div style={{ width: '100%', maxWidth: '420px' }}>
 
           {/* Logo */}
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <div style={{ fontSize: '64px', lineHeight: 1 }}>🍷</div>
-            <h1 style={{
-              color: 'white', fontSize: '32px', fontWeight: 'bold',
-              margin: '8px 0 4px',
-              textShadow: '0 0 30px #e04472',
-            }}>
+            <div className="login-logo" style={{ fontSize: '64px', lineHeight: 1 }}>🍷</div>
+            <h1 className="login-title" style={{ color: 'white', fontSize: '32px', fontWeight: 'bold', margin: '8px 0 4px', textShadow: '0 0 30px #e04472' }}>
               Wine Shop
             </h1>
             <p style={{ color: '#e04472', fontSize: '12px', letterSpacing: '3px', textTransform: 'uppercase' }}>
@@ -261,104 +297,60 @@ const handleSubmit = async (e) => {
           </div>
 
           {/* Card */}
-          <div style={{
-            background: 'rgba(10, 0, 20, 0.85)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(224, 68, 114, 0.3)',
-            borderRadius: '20px', padding: '36px',
-            boxShadow: '0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(224,68,114,0.15)',
-          }}>
-            <h2 style={{
-              color: 'white', fontSize: '20px',
-              fontWeight: '600', marginBottom: '24px', textAlign: 'center',
-            }}>
+          <div className="login-card">
+            <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '600', marginBottom: '24px', textAlign: 'center' }}>
               Welcome Back 🎉
             </h2>
 
             {error && (
-              <div style={{
-                background: 'rgba(220,38,38,0.2)',
-                border: '1px solid rgba(220,38,38,0.5)',
-                color: '#fca5a5', padding: '12px 16px',
-                borderRadius: '10px', marginBottom: '16px', fontSize: '14px',
-              }}>
+              <div style={{ background: 'rgba(220,38,38,0.2)', border: '1px solid rgba(220,38,38,0.5)', color: '#fca5a5', padding: '12px 16px', borderRadius: '10px', marginBottom: '16px', fontSize: '14px' }}>
                 {error}
               </div>
             )}
 
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ color: '#9ca3af', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
-                  Email
-                </label>
+                <label style={{ color: '#9ca3af', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Email</label>
                 <input
+                  className="login-input"
                   type="email" placeholder="your@email.com"
                   value={email} onChange={e => setEmail(e.target.value)} required
-                  style={{
-                    width: '100%', background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '10px', padding: '12px 16px',
-                    color: 'white', outline: 'none', fontSize: '14px',
-                    boxSizing: 'border-box',
-                  }}
                 />
               </div>
 
               <div style={{ marginBottom: '24px' }}>
-                <label style={{ color: '#9ca3af', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
-                  Password
-                </label>
+                <label style={{ color: '#9ca3af', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Password</label>
                 <input
+                  className="login-input"
                   type="password" placeholder="••••••••"
                   value={password} onChange={e => setPassword(e.target.value)} required
-                  style={{
-                    width: '100%', background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '10px', padding: '12px 16px',
-                    color: 'white', outline: 'none', fontSize: '14px',
-                    boxSizing: 'border-box',
-                  }}
                 />
               </div>
 
-              <button type="submit" disabled={loading} style={{
-                width: '100%', padding: '14px',
-                background: loading
-                  ? 'rgba(224,68,114,0.5)'
-                  : 'linear-gradient(135deg, #e04472, #aa00ff)',
-                border: 'none', borderRadius: '10px',
-                color: 'white', fontWeight: '700',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontSize: '16px',
-                boxShadow: '0 4px 20px rgba(224,68,114,0.4)',
-                transition: 'all 0.3s',
-              }}>
+              <button
+                className="login-btn"
+                type="submit"
+                disabled={loading}
+                style={{
+                  background: loading ? 'rgba(224,68,114,0.5)' : 'linear-gradient(135deg, #e04472, #aa00ff)',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                }}
+              >
                 {loading ? 'Signing in...' : '🎉 Sign In'}
               </button>
             </form>
 
-            {/* Register Link for Customers */}
-            <div style={{
-              borderTop: '1px solid rgba(255,255,255,0.08)',
-              marginTop: '24px', paddingTop: '24px',
-              textAlign: 'center',
-            }}>
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '24px', paddingTop: '24px', textAlign: 'center' }}>
               <p style={{ color: '#6b7280', fontSize: '14px' }}>
                 New customer?{' '}
-                <span
-                  onClick={() => navigate('/register')}
-                  style={{ color: '#e04472', cursor: 'pointer', fontWeight: '500' }}
-                >
+                <span onClick={() => navigate('/register')} style={{ color: '#e04472', cursor: 'pointer', fontWeight: '500' }}>
                   Create account
                 </span>
               </p>
             </div>
           </div>
 
-          <p style={{
-            textAlign: 'center', color: '#4b5563',
-            fontSize: '12px', marginTop: '16px',
-          }}>
+          <p style={{ textAlign: 'center', color: '#4b5563', fontSize: '12px', marginTop: '16px' }}>
             Wine Shop Management System © 2026
           </p>
         </div>

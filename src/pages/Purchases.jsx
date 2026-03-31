@@ -4,22 +4,25 @@ import Navbar from '../components/Navbar';
 import axios from '../api/axios';
 
 const STATUS_COLORS = {
-  Received: { color: '#4ade80', bg: 'rgba(74,222,128,0.15)', border: 'rgba(74,222,128,0.3)' },
-  Pending: { color: '#fbbf24', bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.3)' },
-  Cancelled: { color: '#f87171', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.3)' },
+  Received:  { color: '#4ade80', bg: 'rgba(74,222,128,0.15)',  border: 'rgba(74,222,128,0.3)' },
+  Pending:   { color: '#fbbf24', bg: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.3)' },
+  Cancelled: { color: '#f87171', bg: 'rgba(239,68,68,0.15)',   border: 'rgba(239,68,68,0.3)' },
 };
 
 const Purchases = () => {
-  const [purchases, setPurchases] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedPurchase, setSelectedPurchase] = useState(null);
+  const [purchases, setPurchases]             = useState([]);
+  const [filtered, setFiltered]               = useState([]);
+  const [loading, setLoading]                 = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [suppliers, setSuppliers] = useState([]);
-  const [products, setProducts] = useState([]);
+  const [selectedPurchase, setSelectedPurchase] = useState(null);
+  const [suppliers, setSuppliers]             = useState([]);
+  const [products, setProducts]               = useState([]);
+  const [sidebarOpen, setSidebarOpen]         = useState(false);
+  const [search, setSearch]                   = useState('');
   const [form, setForm] = useState({
     supplierId: '',
     notes: '',
-    items: [{ productId: '', quantity: 1, unitCost: '' }]
+    items: [{ productId: '', quantity: 1, unitCost: '' }],
   });
 
   const fetchPurchases = async () => {
@@ -27,11 +30,9 @@ const Purchases = () => {
       setLoading(true);
       const res = await axios.get('/purchases');
       setPurchases(res.data);
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setLoading(false);
-    }
+      setFiltered(res.data);
+    } catch (err) { console.log(err); }
+    finally { setLoading(false); }
   };
 
   const fetchDropdowns = async () => {
@@ -42,12 +43,20 @@ const Purchases = () => {
       ]);
       setSuppliers(supRes.data);
       setProducts(prodRes.data.data);
-    } catch (err) {
-      console.log(err);
-    }
+    } catch (err) { console.log(err); }
   };
 
   useEffect(() => { fetchPurchases(); fetchDropdowns(); }, []);
+
+  useEffect(() => {
+    const q = search.toLowerCase();
+    setFiltered(purchases.filter(p =>
+      p.purchaseNumber?.toLowerCase().includes(q) ||
+      p.supplierName?.toLowerCase().includes(q)   ||
+      p.userName?.toLowerCase().includes(q)        ||
+      p.status?.toLowerCase().includes(q)
+    ));
+  }, [search, purchases]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -57,16 +66,14 @@ const Purchases = () => {
         notes: form.notes,
         items: form.items.map(i => ({
           productId: parseInt(i.productId),
-          quantity: parseInt(i.quantity),
-          unitCost: parseFloat(i.unitCost),
-        }))
+          quantity:  parseInt(i.quantity),
+          unitCost:  parseFloat(i.unitCost),
+        })),
       });
       setShowCreateModal(false);
       setForm({ supplierId: '', notes: '', items: [{ productId: '', quantity: 1, unitCost: '' }] });
       fetchPurchases();
-    } catch (err) {
-      console.log(err);
-    }
+    } catch (err) { console.log(err); }
   };
 
   const handleUpdateStatus = async (id, status) => {
@@ -74,12 +81,10 @@ const Purchases = () => {
       await axios.patch(`/purchases/${id}/status`, { status });
       fetchPurchases();
       setSelectedPurchase(null);
-    } catch (err) {
-      console.log(err);
-    }
+    } catch (err) { console.log(err); }
   };
 
-  const addItem = () => setForm({ ...form, items: [...form.items, { productId: '', quantity: 1, unitCost: '' }] });
+  const addItem    = () => setForm({ ...form, items: [...form.items, { productId: '', quantity: 1, unitCost: '' }] });
   const removeItem = (i) => setForm({ ...form, items: form.items.filter((_, idx) => idx !== i) });
   const updateItem = (i, field, value) => {
     const items = [...form.items];
@@ -87,170 +92,123 @@ const Purchases = () => {
     setForm({ ...form, items });
   };
 
-  const totalPurchases = purchases.reduce((sum, p) => sum + p.totalAmount, 0);
+  const totalCost = purchases.reduce((s, p) => s + p.totalAmount, 0);
 
   const inputStyle = {
-    width: '100%',
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: '10px',
-    padding: '10px 14px',
-    color: 'white',
-    outline: 'none',
-    fontSize: '14px',
-    boxSizing: 'border-box',
+    width: '100%', background: '#0a0010',
+    border: '1px solid #2d0039', borderRadius: '8px',
+    padding: '10px 12px', color: 'white', outline: 'none',
+    fontSize: '13px', boxSizing: 'border-box',
   };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0a0010' }}>
-      <Sidebar />
-      <div style={{ flex: 1, marginLeft: '256px' }}>
-        <Navbar title="Purchases" />
-        <div style={{ padding: '24px', marginTop: '64px' }}>
+
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      <div style={{ flex: 1, padding: '20px', background: '#0a0010' }}>
+
+        <Navbar title="Purchases" onMenuClick={() => setSidebarOpen(true)} />
+
+        <div style={{ marginTop: '20px' }}>
 
           {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginTop: '20px', marginBottom: '20px' }}>
             <div>
-              <h2 style={{ color: 'white', fontSize: '24px', fontWeight: 'bold' }}>📋 Purchases</h2>
-              <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
-                {purchases.length} purchase orders total
-              </p>
+              <h2 style={{ color: 'white', fontSize: 'clamp(18px,2.5vw,22px)', fontWeight: '600' }}>📋 Purchases</h2>
+              <p style={{ color: '#9ca3af', fontSize: '14px' }}>{purchases.length} purchase orders total</p>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              style={{
-                background: 'linear-gradient(135deg, #e04472, #aa00ff)',
-                border: 'none', borderRadius: '10px',
-                padding: '10px 20px', color: 'white',
-                fontWeight: '600', cursor: 'pointer', fontSize: '14px',
-                boxShadow: '0 4px 15px rgba(224,68,114,0.3)',
-              }}
+              style={{ padding: '10px 18px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg,#e04472,#aa00ff)', color: 'white', cursor: 'pointer', fontWeight: '500', whiteSpace: 'nowrap' }}
             >
               + New Purchase
             </button>
           </div>
 
+          {/* Search */}
+          <div style={{ marginBottom: '24px', position: 'relative' }}>
+            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }}>🔍</span>
+            <input
+              placeholder="Search by purchase #, supplier, status..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '12px', border: '1px solid #2d0039', background: '#120018', color: 'white', outline: 'none', boxSizing: 'border-box', fontSize: '14px' }}
+            />
+          </div>
+
           {/* Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: '12px', marginBottom: '24px' }}>
             {[
-              { label: 'Total Purchases', value: purchases.length, color: '#aa00ff', icon: '📋', bg: 'linear-gradient(135deg, #1a004a, #0d0025)' },
-              { label: 'Total Cost', value: `₹${totalPurchases.toLocaleString()}`, color: '#f87171', icon: '💸', bg: 'linear-gradient(135deg, #4a0000, #1a0000)' },
-              { label: 'Received', value: purchases.filter(p => p.status === 'Received').length, color: '#4ade80', icon: '✅', bg: 'linear-gradient(135deg, #004a00, #001a00)' },
-              { label: 'Pending', value: purchases.filter(p => p.status === 'Pending').length, color: '#fbbf24', icon: '⏳', bg: 'linear-gradient(135deg, #4a2a00, #1a1000)' },
+              { label: 'Total Cost',      value: `₹${totalCost.toLocaleString()}`,                          color: '#f87171', icon: '💸' },
+              { label: 'Total Purchases', value: purchases.length,                                          color: '#aa00ff', icon: '📋' },
+              { label: 'Received',        value: purchases.filter(p => p.status === 'Received').length,     color: '#4ade80', icon: '✅' },
+              { label: 'Pending',         value: purchases.filter(p => p.status === 'Pending').length,      color: '#fbbf24', icon: '⏳' },
             ].map((s, i) => (
-              <div key={i} style={{
-                background: s.bg, borderRadius: '16px',
-                padding: '20px', border: `1px solid ${s.color}30`,
-                display: 'flex', alignItems: 'center', gap: '16px',
-              }}>
-                <span style={{ fontSize: '32px' }}>{s.icon}</span>
+              <div key={i} style={{ background: '#140021', borderRadius: '12px', padding: '14px 16px', border: `1px solid ${s.color}30`, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ fontSize: '20px' }}>{s.icon}</div>
                 <div>
                   <p style={{ color: '#9ca3af', fontSize: '12px' }}>{s.label}</p>
-                  <p style={{ color: s.color, fontSize: '20px', fontWeight: 'bold' }}>{s.value}</p>
+                  <p style={{ color: s.color, fontSize: '18px', fontWeight: '700' }}>{s.value}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Purchases Table */}
+          {/* List */}
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '60px', color: '#e04472', fontSize: '18px' }}>
-              Loading Purchases... 📋
-            </div>
-          ) : purchases.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
-              <p>No purchases found</p>
-            </div>
+            <div style={{ color: 'white', padding: '40px 0', textAlign: 'center' }}>Loading...</div>
+          ) : filtered.length === 0 ? (
+            <p style={{ color: '#9ca3af', textAlign: 'center', padding: '60px 0' }}>No purchases found.</p>
           ) : (
-            <div style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '16px', overflow: 'hidden',
-              marginBottom: '24px',
-            }}>
-              {/* Header */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1.5fr 1.5fr 1fr 1fr 1fr 1fr',
-                padding: '14px 20px',
-                background: 'rgba(255,255,255,0.05)',
-                borderBottom: '1px solid rgba(255,255,255,0.08)',
-              }}>
-                {['Purchase #', 'Supplier', 'Total', 'Status', 'Date', 'Action'].map(h => (
-                  <p key={h} style={{ color: '#6b7280', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>
-                    {h}
-                  </p>
-                ))}
-              </div>
-
-              {/* Rows */}
-              {purchases.map((p, i) => {
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {filtered.map((p) => {
                 const status = STATUS_COLORS[p.status] || STATUS_COLORS.Pending;
                 return (
-                  <div key={p.id} style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1.5fr 1.5fr 1fr 1fr 1fr 1fr',
-                    padding: '16px 20px',
-                    borderBottom: '1px solid rgba(255,255,255,0.05)',
-                    alignItems: 'center',
-                    transition: 'background 0.15s',
-                  }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  <div
+                    key={p.id}
+                    style={{ padding: '14px 16px', borderRadius: '14px', background: '#120018', border: '1px solid #1f2937', transition: 'all 0.25s ease' }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = '#7b2cff'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)';   e.currentTarget.style.borderColor = '#1f2937'; }}
                   >
-                    {/* Purchase Number */}
-                    <div>
-                      <p style={{ color: 'white', fontWeight: '600', fontSize: '13px' }}>{p.purchaseNumber}</p>
-                      <p style={{ color: '#6b7280', fontSize: '11px' }}>{p.items?.length} items</p>
-                    </div>
-
-                    {/* Supplier */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{
-                        width: '32px', height: '32px', borderRadius: '8px',
-                        background: 'rgba(224,68,114,0.2)',
-                        display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', fontSize: '16px',
-                      }}>
-                        🏭
-                      </div>
-                      <div>
-                        <p style={{ color: 'white', fontSize: '13px' }}>{p.supplierName}</p>
-                        <p style={{ color: '#6b7280', fontSize: '11px' }}>{p.userName}</p>
+                    {/* Top row: icon + purchase# + badge */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                      <div style={{ fontSize: '22px', flexShrink: 0 }}>🏭</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <p style={{ color: 'white', fontWeight: '600', fontSize: '14px', whiteSpace: 'nowrap' }}>
+                            {p.purchaseNumber}
+                          </p>
+                          <span style={{ padding: '2px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '500', background: status.bg, color: status.color, border: `1px solid ${status.border}`, whiteSpace: 'nowrap' }}>
+                            {p.status}
+                          </span>
+                        </div>
+                        <p style={{ color: '#9ca3af', fontSize: '12px', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {p.supplierName} &nbsp;·&nbsp; {p.userName}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Total */}
-                    <p style={{ color: '#f87171', fontWeight: '600', fontSize: '14px' }}>
-                      ₹{p.totalAmount?.toLocaleString()}
-                    </p>
-
-                    {/* Status */}
-                    <span style={{
-                      padding: '3px 10px', borderRadius: '20px',
-                      fontSize: '11px', fontWeight: '500',
-                      background: status.bg, color: status.color,
-                      border: `1px solid ${status.border}`,
-                      display: 'inline-block',
-                    }}>
-                      {p.status}
-                    </span>
-
-                    {/* Date */}
-                    <p style={{ color: '#9ca3af', fontSize: '12px' }}>
-                      {new Date(p.purchaseDate).toLocaleDateString('en-IN')}
-                    </p>
-
-                    {/* Action */}
-                    <button onClick={() => setSelectedPurchase(p)} style={{
-                      background: 'rgba(224,68,114,0.15)',
-                      border: '1px solid rgba(224,68,114,0.3)',
-                      borderRadius: '8px', padding: '6px 12px',
-                      color: '#e04472', cursor: 'pointer', fontSize: '12px',
-                    }}>
-                      👁️ View
-                    </button>
+                    {/* Bottom row: amount · items · date  |  View button */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', minWidth: 0 }}>
+                        <p style={{ color: '#f87171', fontWeight: '700', fontSize: '15px', whiteSpace: 'nowrap' }}>
+                          ₹{p.totalAmount?.toLocaleString()}
+                        </p>
+                        <p style={{ color: '#9ca3af', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                          {p.items?.length} item{p.items?.length !== 1 ? 's' : ''}
+                        </p>
+                        <p style={{ color: '#6b7280', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                          {new Date(p.purchaseDate).toLocaleDateString('en-IN')}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setSelectedPurchase(p)}
+                        style={{ background: 'rgba(224,68,114,0.15)', border: '1px solid rgba(224,68,114,0.3)', borderRadius: '8px', padding: '6px 14px', color: '#e04472', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
+                      >
+                        👁️ View
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -259,124 +217,65 @@ const Purchases = () => {
         </div>
       </div>
 
-      {/* Purchase Detail Modal */}
+      {/* Detail Modal */}
       {selectedPurchase && (
-        <div style={{
-          position: 'fixed', inset: 0,
-          background: 'rgba(0,0,0,0.8)',
-          display: 'flex', alignItems: 'center',
-          justifyContent: 'center', zIndex: 50,
-          backdropFilter: 'blur(4px)',
-        }}>
-          <div style={{
-            background: '#0d0018',
-            border: '1px solid rgba(224,68,114,0.3)',
-            borderRadius: '20px', padding: '32px',
-            width: '100%', maxWidth: '560px',
-            maxHeight: '90vh', overflowY: 'auto',
-            boxShadow: '0 25px 60px rgba(0,0,0,0.8)',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999, padding: '16px' }}>
+          <div style={{ background: '#120018', padding: '22px', borderRadius: '14px', width: '100%', maxWidth: '460px', border: '1px solid #2d0039', boxShadow: '0 10px 30px rgba(0,0,0,0.6)', maxHeight: '90vh', overflowY: 'auto' }}>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px', gap: '8px' }}>
               <div>
-                <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '600' }}>
-                  📋 {selectedPurchase.purchaseNumber}
-                </h3>
-                <p style={{ color: '#6b7280', fontSize: '13px', marginTop: '4px' }}>
-                  {new Date(selectedPurchase.purchaseDate).toLocaleString('en-IN')}
-                </p>
+                <h3 style={{ color: 'white', fontSize: '17px', fontWeight: '600' }}>📋 Purchase Details</h3>
+                <p style={{ color: '#9ca3af', fontSize: '12px', marginTop: '2px' }}>{new Date(selectedPurchase.purchaseDate).toLocaleString('en-IN')}</p>
               </div>
-              <span style={{
-                padding: '6px 14px', borderRadius: '20px', fontSize: '12px',
-                background: STATUS_COLORS[selectedPurchase.status]?.bg,
-                color: STATUS_COLORS[selectedPurchase.status]?.color,
-                border: `1px solid ${STATUS_COLORS[selectedPurchase.status]?.border}`,
-              }}>
+              <span style={{ padding: '3px 12px', borderRadius: '20px', fontSize: '12px', flexShrink: 0, background: STATUS_COLORS[selectedPurchase.status]?.bg, color: STATUS_COLORS[selectedPurchase.status]?.color, border: `1px solid ${STATUS_COLORS[selectedPurchase.status]?.border}` }}>
                 {selectedPurchase.status}
               </span>
             </div>
 
-            {/* Info */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
               {[
-                { label: 'SUPPLIER', value: selectedPurchase.supplierName },
-                { label: 'PROCESSED BY', value: selectedPurchase.userName },
+                { label: 'Purchase #',   value: selectedPurchase.purchaseNumber },
+                { label: 'Supplier',     value: selectedPurchase.supplierName },
+                { label: 'Processed By', value: selectedPurchase.userName },
+                { label: 'Notes',        value: selectedPurchase.notes || 'N/A' },
               ].map((row, i) => (
-                <div key={i} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '12px', padding: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <p style={{ color: '#6b7280', fontSize: '11px', marginBottom: '4px' }}>{row.label}</p>
-                  <p style={{ color: 'white', fontWeight: '500' }}>{row.value}</p>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', padding: '9px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <p style={{ color: '#9ca3af', fontSize: '13px', flexShrink: 0 }}>{row.label}</p>
+                  <p style={{ color: 'white', fontSize: '13px', textAlign: 'right', wordBreak: 'break-word' }}>{row.value}</p>
                 </div>
               ))}
             </div>
 
-            {/* Items */}
-            <div style={{ marginBottom: '20px' }}>
-              <p style={{ color: '#6b7280', fontSize: '12px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Purchase Items
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {selectedPurchase.items?.map((item, i) => (
-                  <div key={i} style={{
-                    display: 'flex', justifyContent: 'space-between',
-                    alignItems: 'center',
-                    background: 'rgba(255,255,255,0.03)',
-                    borderRadius: '10px', padding: '12px 16px',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '20px' }}>🍾</span>
-                      <div>
-                        <p style={{ color: 'white', fontSize: '13px', fontWeight: '500' }}>{item.productName}</p>
-                        <p style={{ color: '#6b7280', fontSize: '11px' }}>₹{item.unitCost} × {item.quantity}</p>
-                      </div>
-                    </div>
-                    <p style={{ color: '#f87171', fontWeight: '600' }}>₹{item.totalCost?.toLocaleString()}</p>
+            <p style={{ color: '#9ca3af', fontSize: '11px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Items</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+              {selectedPurchase.items?.map((item, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '10px 12px', border: '1px solid rgba(255,255,255,0.06)', gap: '8px' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ color: 'white', fontSize: '13px', fontWeight: '500' }}>{item.productName}</p>
+                    <p style={{ color: '#9ca3af', fontSize: '12px' }}>₹{item.unitCost} × {item.quantity}</p>
                   </div>
-                ))}
-              </div>
+                  <p style={{ color: '#f87171', fontWeight: '600', whiteSpace: 'nowrap', flexShrink: 0 }}>₹{item.totalCost?.toLocaleString()}</p>
+                </div>
+              ))}
             </div>
 
-            {/* Total */}
-            <div style={{
-              background: 'rgba(255,255,255,0.03)',
-              borderRadius: '12px', padding: '16px',
-              border: '1px solid rgba(255,255,255,0.08)',
-              display: 'flex', justifyContent: 'space-between',
-              alignItems: 'center', marginBottom: '20px',
-            }}>
-              <p style={{ color: 'white', fontWeight: '600' }}>Total Amount</p>
-              <p style={{ color: '#f87171', fontWeight: '700', fontSize: '20px' }}>
-                ₹{selectedPurchase.totalAmount?.toLocaleString()}
-              </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.04)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '18px' }}>
+              <p style={{ color: 'white', fontWeight: '600', fontSize: '14px' }}>Total Amount</p>
+              <p style={{ color: '#f87171', fontWeight: '700', fontSize: '18px' }}>₹{selectedPurchase.totalAmount?.toLocaleString()}</p>
             </div>
 
-            {/* Actions */}
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {selectedPurchase.status === 'Pending' && (
                 <>
-                  <button onClick={() => handleUpdateStatus(selectedPurchase.id, 'Received')} style={{
-                    flex: 1, background: 'rgba(74,222,128,0.15)',
-                    border: '1px solid rgba(74,222,128,0.3)',
-                    borderRadius: '10px', padding: '10px',
-                    color: '#4ade80', cursor: 'pointer', fontSize: '13px', fontWeight: '500',
-                  }}>
-                    ✅ Mark Received
+                  <button onClick={() => handleUpdateStatus(selectedPurchase.id, 'Received')} style={{ flex: 1, minWidth: '100px', padding: '10px', borderRadius: '8px', border: '1px solid rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.1)', color: '#4ade80', cursor: 'pointer', fontSize: '13px' }}>
+                    ✅ Received
                   </button>
-                  <button onClick={() => handleUpdateStatus(selectedPurchase.id, 'Cancelled')} style={{
-                    flex: 1, background: 'rgba(239,68,68,0.15)',
-                    border: '1px solid rgba(239,68,68,0.3)',
-                    borderRadius: '10px', padding: '10px',
-                    color: '#f87171', cursor: 'pointer', fontSize: '13px', fontWeight: '500',
-                  }}>
+                  <button onClick={() => handleUpdateStatus(selectedPurchase.id, 'Cancelled')} style={{ flex: 1, minWidth: '90px', padding: '10px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: '#f87171', cursor: 'pointer', fontSize: '13px' }}>
                     ❌ Cancel
                   </button>
                 </>
               )}
-              <button onClick={() => setSelectedPurchase(null)} style={{
-                flex: 1, background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '10px', padding: '10px',
-                color: 'white', cursor: 'pointer', fontSize: '13px',
-              }}>
+              <button onClick={() => setSelectedPurchase(null)} style={{ flex: 1, minWidth: '70px', padding: '10px', borderRadius: '8px', border: '1px solid #2d0039', background: 'transparent', color: '#9ca3af', cursor: 'pointer' }}>
                 Close
               </button>
             </div>
@@ -384,100 +283,85 @@ const Purchases = () => {
         </div>
       )}
 
-      {/* Create Purchase Modal */}
+      {/* Create Modal */}
       {showCreateModal && (
-        <div style={{
-          position: 'fixed', inset: 0,
-          background: 'rgba(0,0,0,0.8)',
-          display: 'flex', alignItems: 'center',
-          justifyContent: 'center', zIndex: 50,
-          backdropFilter: 'blur(4px)',
-        }}>
-          <div style={{
-            background: '#0d0018',
-            border: '1px solid rgba(224,68,114,0.3)',
-            borderRadius: '20px', padding: '32px',
-            width: '100%', maxWidth: '560px',
-            maxHeight: '90vh', overflowY: 'auto',
-            boxShadow: '0 25px 60px rgba(0,0,0,0.8)',
-          }}>
-            <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '600', marginBottom: '24px' }}>
-              + New Purchase Order
-            </h3>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999, padding: '16px' }}>
+          <div style={{ background: '#120018', padding: '22px', borderRadius: '14px', width: '100%', maxWidth: '440px', border: '1px solid #2d0039', boxShadow: '0 10px 30px rgba(0,0,0,0.6)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3 style={{ color: 'white', marginBottom: '18px', fontSize: '17px', fontWeight: '600' }}>➕ New Purchase Order</h3>
             <form onSubmit={handleCreate}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <select style={{ ...inputStyle, cursor: 'pointer' }} value={form.supplierId}
-                  onChange={e => setForm({ ...form, supplierId: e.target.value })} required>
-                  <option value="">Select Supplier *</option>
-                  {suppliers.map(s => (
-                    <option key={s.id} value={s.id} style={{ background: '#0d0018' }}>{s.name}</option>
-                  ))}
-                </select>
 
-                <input placeholder="Notes (optional)" style={inputStyle}
-                  value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+                <div>
+                  <label style={{ color: '#9ca3af', fontSize: '13px', display: 'block', marginBottom: '5px' }}>Select Supplier *</label>
+                  <select style={{ ...inputStyle, cursor: 'pointer' }} value={form.supplierId} onChange={e => setForm({ ...form, supplierId: e.target.value })} required>
+                    <option value="">-- Select Supplier --</option>
+                    {suppliers.map(s => (
+                      <option key={s.id} value={s.id} style={{ background: '#0a0010' }}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
 
-                {/* Items */}
+                <div>
+                  <label style={{ color: '#9ca3af', fontSize: '13px', display: 'block', marginBottom: '5px' }}>Notes (optional)</label>
+                  <input placeholder="Add notes..." style={inputStyle} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+                </div>
+
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <p style={{ color: '#9ca3af', fontSize: '13px' }}>Purchase Items</p>
-                    <button type="button" onClick={addItem} style={{
-                      background: 'rgba(224,68,114,0.15)',
-                      border: '1px solid rgba(224,68,114,0.3)',
-                      borderRadius: '8px', padding: '4px 12px',
-                      color: '#e04472', cursor: 'pointer', fontSize: '12px',
-                    }}>
+                    <label style={{ color: '#9ca3af', fontSize: '13px' }}>Purchase Items</label>
+                    <button type="button" onClick={addItem} style={{ background: 'rgba(224,68,114,0.15)', border: '1px solid rgba(224,68,114,0.3)', borderRadius: '8px', padding: '4px 12px', color: '#e04472', cursor: 'pointer', fontSize: '12px' }}>
                       + Add Item
                     </button>
                   </div>
-                  {form.items.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
-                      <select style={{ ...inputStyle, flex: 2, cursor: 'pointer' }} value={item.productId}
-                        onChange={e => updateItem(i, 'productId', e.target.value)} required>
-                        <option value="">Select Product</option>
-                        {products.map(p => (
-                          <option key={p.id} value={p.id} style={{ background: '#0d0018' }}>
-                            {p.name}
-                          </option>
-                        ))}
-                      </select>
-                      <input type="number" min="1" placeholder="Qty"
-                        style={{ ...inputStyle, flex: 1 }}
-                        value={item.quantity}
-                        onChange={e => updateItem(i, 'quantity', e.target.value)} required />
-                      <input type="number" placeholder="Cost ₹"
-                        style={{ ...inputStyle, flex: 1 }}
-                        value={item.unitCost}
-                        onChange={e => updateItem(i, 'unitCost', e.target.value)} required />
-                      {form.items.length > 1 && (
-                        <button type="button" onClick={() => removeItem(i)} style={{
-                          background: 'rgba(239,68,68,0.15)',
-                          border: '1px solid rgba(239,68,68,0.3)',
-                          borderRadius: '8px', padding: '8px 10px',
-                          color: '#f87171', cursor: 'pointer', fontSize: '14px', flexShrink: 0,
-                        }}>
-                          🗑️
-                        </button>
-                      )}
-                    </div>
-                  ))}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {form.items.map((item, i) => (
+                      <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 56px 72px auto', gap: '6px', alignItems: 'center' }}>
+                        <select
+                          style={{ ...inputStyle, cursor: 'pointer' }}
+                          value={item.productId}
+                          onChange={e => updateItem(i, 'productId', e.target.value)}
+                          required
+                        >
+                          <option value="">Product</option>
+                          {products.map(pr => (
+                            <option key={pr.id} value={pr.id} style={{ background: '#0a0010' }}>{pr.name}</option>
+                          ))}
+                        </select>
+                        <input
+                          type="number" min="1" placeholder="Qty"
+                          style={{ ...inputStyle }}
+                          value={item.quantity}
+                          onChange={e => updateItem(i, 'quantity', e.target.value)}
+                          required
+                        />
+                        <input
+                          type="number" placeholder="₹Cost"
+                          style={{ ...inputStyle }}
+                          value={item.unitCost}
+                          onChange={e => updateItem(i, 'unitCost', e.target.value)}
+                          required
+                        />
+                        {form.items.length > 1 ? (
+                          <button
+                            type="button"
+                            onClick={() => removeItem(i)}
+                            style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', padding: '8px', color: '#f87171', cursor: 'pointer', fontSize: '14px', height: '38px', width: '38px' }}
+                          >
+                            🗑️
+                          </button>
+                        ) : <div />}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-                <button type="submit" style={{
-                  flex: 1, background: 'linear-gradient(135deg, #e04472, #aa00ff)',
-                  border: 'none', borderRadius: '10px', padding: '12px',
-                  color: 'white', fontWeight: '600', cursor: 'pointer', fontSize: '15px',
-                }}>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                <button type="submit" style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg,#e04472,#aa00ff)', color: 'white', fontWeight: '500', cursor: 'pointer' }}>
                   Create Purchase
                 </button>
-                <button type="button" onClick={() => setShowCreateModal(false)} style={{
-                  flex: 1, background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '10px', padding: '12px',
-                  color: 'white', cursor: 'pointer', fontSize: '15px',
-                }}>
+                <button type="button" onClick={() => setShowCreateModal(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #2d0039', background: 'transparent', color: '#9ca3af', cursor: 'pointer' }}>
                   Cancel
                 </button>
               </div>
